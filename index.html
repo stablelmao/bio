@@ -8,23 +8,55 @@
 </head>
 
 <body>
+    <audio id="music" loop preload="auto">
+        <source src="music/song.mp3" type="audio/mpeg">
+    </audio>
 
-    <h1>
-        <span class="typewriter1">stable!</span>
-    </h1>
+    <div class="entry-gate" id="entry-gate">
+        <button class="entry-button" id="start-music" type="button">[ click to enter :p]</button>
+    </div>
 
-    <h2>
-        <span class="typewriter2">unity dev | beginning coder</span>
-    </h2>
+    <main>
+        <h1>
+            <span class="typewriter1">stable!</span>
+        </h1>
 
-    <ul>
-        <li class="fadein">95% | unity</li>
-        <li class="fadein">5% | C#</li>
-        <li class="fadein">40% | HTML</li>
-    </ul>
-    <p class="fadein2">hi, i made this because i finally starting learning to code and not skid. um, so yea, it'll prolly improve over time hopefully.</p>
-    <p class="fadein2">ok bye :)</P>
+        <h2>
+            <span class="typewriter2">unity dev | beginning coder</span>
+        </h2>
+
+        <div class="content-row">
+            <aside class="skills side-list">
+                <p>[ skills ]</p>
+                <ul>
+                    <li>unity | 95%</li>
+                    <li>C# | 5%</li>
+                    <li>HTML | 40%</li>
+                </ul>
+            </aside>
+
+            <div class="main-content">
+                <p>hi, i made this because i finally starting learning to code and not skid. um, so yea, it'll prolly improve over time hopefully.</p>
+                <p>ok bye :)</p>
+            </div>
+
+            <aside class="changes">
+                <p>[ changes ]</p>
+                <ul>
+                    <li>+ added music</li>
+                    <li>+ changed layout</li>
+                    <li>+ added skills section</li>
+                    <li>+ added changes section</li>
+                    <li>+ added audio toggle</li>
+                    <li>+ added entry gate</li>
+                    <li>+ optimized animations</li>
+                </ul>
+            </aside>
+        </div>
+
+        <button class="audio-toggle" id="audio-toggle" type="button" aria-label="Mute music">[ music: on ]</button>
+    </main>
     
-    <script type="module" src="main.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>

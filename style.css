@@ -10,6 +10,14 @@ body {
     min-height: 100vh;
 }
 
+main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
 h2 {
     font-size: 20px;
     text-align: center;
@@ -28,15 +36,13 @@ p {
     margin-bottom: 0px;
 }
 
+.main-content p {
+    margin-top: 0;
+}
+
 ul {
     color: white;
     font-family: arial;
-
-    display: grid;
-    grid-template-columns: repeat(3, 3fr);
-
-    gap: 10px 40px;
-
     list-style-position: inside;
 }
 
@@ -119,9 +125,111 @@ ul {
 @keyframes fadeIn {
     from {
         opacity: 0;
+        transform: translateY(10px);
     }
 
     to {
         opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.entry-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    background: rgb(255 89 241 / 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: opacity 700ms ease, visibility 700ms ease;
+}
+
+.entry-gate.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.entry-button,
+.audio-toggle {
+    border: 0;
+    padding: 0;
+    color: white;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.entry-button {
+    font-size: 20px;
+}
+
+.entry-button:hover,
+.entry-button:focus-visible,
+.audio-toggle:hover,
+.audio-toggle:focus-visible {
+    text-decoration: underline;
+    outline: none;
+}
+
+.audio-toggle {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    font-size: 13px;
+}
+
+.content-row {
+    display: grid;
+    grid-template-columns: 180px minmax(280px, 360px) 180px;
+    align-items: center;
+    gap: 70px;
+    margin-top: 28px;
+}
+
+.main-content {
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 700ms ease forwards;
+    animation-delay: 3s;
+}
+
+.side-list,
+.changes {
+    opacity: 0;
+    animation: fadeIn 700ms ease forwards;
+    animation-delay: 3.35s;
+}
+
+.changes {
+    animation-delay: 3.7s;
+}
+
+.side-list p,
+.changes p {
+    margin: 0;
+    text-align: left;
+}
+
+.side-list ul,
+.changes ul {
+    display: block;
+    margin: 12px 0 0;
+    padding: 0;
+    line-height: 1.8;
+    list-style: none;
+}
+
+@media (max-width: 650px) {
+    .content-row {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .side-list p,
+    .changes p {
+        text-align: center;
     }
 }
