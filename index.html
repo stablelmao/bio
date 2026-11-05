@@ -1,62 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#3b0835" />
+    <meta
+      name="description"
+      content="stable! unity dev, beginning coder, and learning as i go."
+    />
     <title>stablelmao :p</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
     <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
-</head>
+  </head>
 
-<body>
-    <audio id="music" loop preload="auto">
-        <source src="music/song.mp3" type="audio/mpeg">
+  <body>
+    <audio id="music" loop preload="none">
+      <source src="music/song.mp3" type="audio/mpeg" />
     </audio>
 
-    <div class="entry-gate" id="entry-gate">
-        <button class="entry-button" id="start-music" type="button">[ click to enter :p]</button>
+    <div class="entry-gate" id="entry-gate" hidden>
+      <div class="entry-content">
+        <p class="entry-title">stable!</p>
+        <button class="entry-button" id="start-music" type="button">
+          [ click to enter :p ]
+        </button>
+        <button class="quiet-button" id="enter-silent" type="button">
+          enter without music
+        </button>
+      </div>
     </div>
 
-    <main>
-        <h1>
-            <span class="typewriter1">stable!</span>
+    <main id="bio">
+      <header class="intro">
+        <h1 tabindex="-1" id="name">
+          <span class="typewriter1">stable!</span>
         </h1>
 
         <h2>
-            <span class="typewriter2">unity dev | beginning coder</span>
+          <span class="typewriter2">unity dev | beginning coder</span>
         </h2>
+      </header>
 
-        <div class="content-row">
-            <aside class="skills side-list">
-                <p>[ skills ]</p>
-                <ul>
-                    <li>unity | 95%</li>
-                    <li>C# | 5%</li>
-                    <li>HTML | 40%</li>
-                </ul>
-            </aside>
+      <div class="content-row">
+        <aside class="skills side-list">
+          <h3>[ skills ]</h3>
+          <ul>
+            <li>unity | 95%</li>
+            <li>C# | 5%</li>
+            <li>HTML | 40%</li>
+          </ul>
+        </aside>
 
-            <div class="main-content">
-                <p>hi, i made this because i finally starting learning to code and not skid. um, so yea, it'll prolly improve over time hopefully.</p>
-                <p>ok bye :)</p>
-            </div>
-
-            <aside class="changes">
-                <p>[ changes ]</p>
-                <ul>
-                    <li>+ added music</li>
-                    <li>+ changed layout</li>
-                    <li>+ added skills section</li>
-                    <li>+ added changes section</li>
-                    <li>+ added audio toggle</li>
-                    <li>+ added entry gate</li>
-                    <li>+ optimized animations</li>
-                </ul>
-            </aside>
+        <div class="main-content">
+          <p>
+            hi, i made this because i finally started learning to code and not
+            skid. um, so yea, it'll prolly improve over time hopefully.
+          </p>
+          <p>ok bye :)</p>
         </div>
 
-        <button class="audio-toggle" id="audio-toggle" type="button" aria-label="Mute music">[ music: on ]</button>
+        <aside class="changes">
+          <h3>[ changes ]</h3>
+          <ul>
+            <li>+ mobile support</li>
+            <li>+ radial gradient</li>
+            <li>+ bolder text</li>
+            <li>+ improved music controls</li>
+            <li>+ reduced motion support</li>
+          </ul>
+        </aside>
+      </div>
+
+      <footer class="site-footer">
+        <a
+          href="https://github.com/stablelmao/bio"
+          target="_blank"
+          rel="noopener noreferrer"
+          >[ source code ]</a
+        >
+        <button
+          class="audio-toggle"
+          id="audio-toggle"
+          type="button"
+          aria-label="Play music"
+          aria-pressed="false"
+          hidden
+        >
+          [ music: off ]
+        </button>
+      </footer>
     </main>
-    
+
     <script src="main.js"></script>
-</body>
+  </body>
 </html>
