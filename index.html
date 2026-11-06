@@ -16,7 +16,7 @@
       content="stable! unity dev, beginning coder, and learning as i go."
     />
     <title>stablelmao :p</title>
-    <link rel="stylesheet" href="style.css?v=floating-nav-1" />
+    <link rel="stylesheet" href="style.css?v=wall-nav-2" />
     <noscript
       ><style>
         .page-view[hidden] {
@@ -62,6 +62,7 @@
         <a href="#portfolio">portfolio</a>
         <a href="#about">more about me</a>
         <a href="#links">links</a>
+        <a href="#wall">comments wall</a>
       </div>
     </nav>
 
@@ -176,6 +177,48 @@
         </a>
       </section>
 
+      <section
+        class="page-view detail-view"
+        id="wall"
+        aria-labelledby="wall-title"
+        hidden
+      >
+        <h1 id="wall-title" tabindex="-1">comments wall.</h1>
+        <p class="view-lead">you were here. leave a little something :)</p>
+        <div class="wall-actions">
+          <a
+            class="wall-write"
+            href="https://github.com/stablelmao/bio/issues/2#new_comment_field"
+            target="_blank"
+            rel="noopener noreferrer"
+            >[ leave a comment ]</a
+          >
+          <button
+            class="wall-refresh quiet-button"
+            id="wall-refresh"
+            type="button"
+          >
+            [ refresh ]
+          </button>
+        </div>
+        <p class="wall-help">
+          comments are public. sign in with github to post.
+        </p>
+        <p id="wall-status" role="status">open the wall to load messages.</p>
+        <div
+          id="wall-comments"
+          class="wall-comments"
+          aria-label="Visitor comments"
+        ></div>
+        <a
+          class="wall-thread"
+          href="https://github.com/stablelmao/bio/issues/2"
+          target="_blank"
+          rel="noopener noreferrer"
+          >[ view the full thread on github ]</a
+        >
+      </section>
+
       <footer class="site-footer">
         <a
           href="https://github.com/stablelmao/bio"
@@ -196,6 +239,6 @@
       </footer>
     </main>
 
-    <script src="main.js?v=floating-nav-1"></script>
+    <script src="main.js?v=wall-nav-2"></script>
   </body>
 </html>

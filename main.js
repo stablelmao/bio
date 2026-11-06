@@ -8,6 +8,11 @@ const siteNav = document.querySelector("#site-nav");
 const navToggle = document.querySelector(".nav-toggle");
 const pageViews = [...document.querySelectorAll(".page-view")];
 const navLinks = [...siteNav.querySelectorAll("a")];
+const wallStatus = document.querySelector("#wall-status");
+const wallComments = document.querySelector("#wall-comments");
+const wallRefresh = document.querySelector("#wall-refresh");
+let wallLoading = false;
+let wallLoadedAt = 0;
 let starting = false;
 
 music.volume = 0.35;
@@ -37,10 +42,11 @@ function showPage(moveFocus = true) {
     else link.removeAttribute("aria-current");
   });
   closeMenu();
+  if (selected.id === "wall" && entryGate.hidden) void loadWall();
   document.title =
     selected.id === "home"
       ? "stablelmao :p"
-      : `${selected.id === "about" ? "more about me" : selected.id} | stable!`;
+      : `${selected.id === "about" ? "more about me" : selected.id === "wall" ? "comments wall" : selected.id} | stable!`;
   if (moveFocus && entryGate.hidden) {
     selected.querySelector("h1").focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -117,3 +123,76 @@ audioToggle.addEventListener("click", () => {
 music.addEventListener("play", updateAudio);
 music.addEventListener("pause", updateAudio);
 music.addEventListener("volumechange", updateAudio);
+
+async function loadWall(force = false) {
+  if (wallLoading || (!force && Date.now() - wallLoadedAt < 60000)) return;
+  wallLoading = true;
+  wallRefresh.disabled = true;
+  wallStatus.textContent = "loading messages...";
+  wallComments.setAttribute("aria-busy", "true");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(
+      "https://api.github.com/repos/stablelmao/bio/issues/2/comments?per_page=100",
+      {
+        headers: { Accept: "application/vnd.github+json" },
+        signal: controller.signal,
+      },
+    );
+    if (!response.ok) throw new Error("Comments unavailable");
+    const comments = await response.json();
+    if (!Array.isArray(comments)) throw new Error("Invalid comments");
+    const fragment = document.createDocumentFragment();
+    for (const comment of [...comments].reverse()) {
+      if (
+        !comment.user ||
+        !/^[a-zA-Z0-9-]+$/.test(comment.user.login) ||
+        !Number.isSafeInteger(comment.id)
+      )
+        continue;
+      const article = document.createElement("article");
+      article.className = "wall-comment";
+      const header = document.createElement("header");
+      const author = document.createElement("a");
+      author.className = "wall-comment-author";
+      author.href = `https://github.com/${comment.user.login}`;
+      author.target = "_blank";
+      author.rel = "noopener noreferrer";
+      author.textContent = `@${comment.user.login}`;
+      header.append(author);
+      const date = new Date(comment.created_at);
+      if (!Number.isNaN(date.getTime())) {
+        const time = document.createElement("time");
+        time.dateTime = date.toISOString();
+        time.textContent = date.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+        header.append(time);
+      }
+      const body = document.createElement("p");
+      body.textContent = String(comment.body || "").slice(0, 10000);
+      article.append(header, body);
+      fragment.append(article);
+    }
+    const count = fragment.childElementCount;
+    wallComments.replaceChildren(fragment);
+    wallStatus.textContent = count
+      ? `${count} ${count === 1 ? "message" : "messages"}${comments.length === 100 ? " shown. see the full thread for more." : "."}`
+      : "no messages yet. be the first to say hi :)";
+    wallLoadedAt = Date.now();
+  } catch {
+    wallStatus.textContent =
+      "couldn't load messages right now. try refresh or open the github thread below.";
+  } finally {
+    clearTimeout(timeout);
+    wallLoading = false;
+    wallRefresh.disabled = false;
+    wallComments.setAttribute("aria-busy", "false");
+  }
+}
+wallRefresh.addEventListener("click", () => {
+  void loadWall(true);
+});
