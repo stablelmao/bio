@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>more about me | stable!</title>
+    <meta
+      name="description"
+      content="hi, i'm aidan. also stable! unity dev and beginning coder."
+    />
+    <meta name="theme-color" content="#ff8de9" />
+    <link rel="canonical" href="https://aidan.im/about" />
+    <meta property="og:title" content="more about me." />
+    <meta
+      property="og:description"
+      content="hi, i'm aidan. also stable! unity dev and beginning coder."
+    />
+    <meta property="og:url" content="https://aidan.im/about" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://aidan.im/preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/style.css?v=pages-4" />
+    <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+  </head>
+  <body data-page="about">
+    <audio id="music" loop preload="none">
+      <source src="/music/song.mp3" type="audio/mpeg" />
+    </audio>
+
+    <nav class="floating-nav" id="site-nav" aria-label="Main navigation">
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="nav-items"
+        hidden
+      >
+        [ menu ]
+      </button>
+      <a class="nav-brand" href="/" aria-label="stable! home">stable!</a>
+      <div class="nav-items" id="nav-items">
+        <a href="/portfolio">portfolio</a>
+        <a href="/about" aria-current="page">more about me</a>
+        <a href="/links">links</a>
+        <a href="/wall">comments wall</a>
+      </div>
+    </nav>
+    <main id="bio">
+      <section
+        class="page-view detail-view"
+        id="about"
+        aria-labelledby="about-title"
+      >
+        <h1 id="about-title" tabindex="-1">more about me.</h1>
+        <p class="view-lead">hi, i'm aidan. also stable!</p>
+        <div class="about-copy">
+          <p>
+            i'm a unity dev and a beginning coder. i'm learning c#, html, css,
+            and javascript as i build things.
+          </p>
+          <p>
+            this site is part of that. trying stuff, figuring out what works,
+            and making it a little better over time.
+          </p>
+          <p>still learning. still making stuff. :p</p>
+        </div>
+      </section>
+      <footer class="site-footer">
+        <a
+          href="https://github.com/stablelmao/bio"
+          target="_blank"
+          rel="noopener noreferrer"
+          >[ source code ]</a
+        >
+        <button
+          class="audio-toggle"
+          id="audio-toggle"
+          type="button"
+          aria-label="Play music"
+          aria-pressed="false"
+          hidden
+        >
+          [ music: off ]
+        </button>
+      </footer>
+    </main>
+    <script src="/main.js?v=pages-4"></script>
+  </body>
+</html>

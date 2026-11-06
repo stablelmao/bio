@@ -1,57 +1,52 @@
 const music = document.querySelector("#music");
 const entryGate = document.querySelector("#entry-gate");
-const startMusic = document.querySelector("#start-music");
-const enterSilent = document.querySelector("#enter-silent");
 const audioToggle = document.querySelector("#audio-toggle");
 const bio = document.querySelector("#bio");
 const siteNav = document.querySelector("#site-nav");
 const navToggle = document.querySelector(".nav-toggle");
-const pageViews = [...document.querySelectorAll(".page-view")];
-const navLinks = [...siteNav.querySelectorAll("a")];
-const wallStatus = document.querySelector("#wall-status");
-const wallComments = document.querySelector("#wall-comments");
-const wallRefresh = document.querySelector("#wall-refresh");
-let wallLoading = false;
-let wallLoadedAt = 0;
+const sessionKey = "stable-site-session";
 let starting = false;
+let saved = {};
+try {
+  saved = JSON.parse(sessionStorage.getItem(sessionKey) || "{}") || {};
+} catch {}
 
-music.volume = 0.35;
-entryGate.hidden = false;
-audioToggle.hidden = false;
-bio.inert = true;
-siteNav.inert = true;
-siteNav.classList.add("is-enhanced");
-navToggle.hidden = false;
-startMusic.focus();
+// Keep previously shared hash links working, but send them to actual documents.
+const legacyRoutes = {
+  "#home": "/",
+  "#portfolio": "/portfolio",
+  "#about": "/about",
+  "#links": "/links",
+  "#wall": "/wall",
+};
+function redirectLegacyLink() {
+  if (
+    ["/", "/index.html"].includes(location.pathname) &&
+    legacyRoutes[location.hash]
+  )
+    location.replace(legacyRoutes[location.hash]);
+}
+redirectLegacyLink();
+window.addEventListener("hashchange", redirectLegacyLink);
 
+function saveSession() {
+  try {
+    sessionStorage.setItem(
+      sessionKey,
+      JSON.stringify({
+        entered: !entryGate || entryGate.hidden,
+        playing: !music.paused && !music.muted,
+        time: music.currentTime,
+      }),
+    );
+  } catch {}
+}
 function closeMenu() {
   siteNav.classList.remove("is-open");
   navToggle.setAttribute("aria-expanded", "false");
 }
-
-function showPage(moveFocus = true) {
-  const requested = location.hash.slice(1) || "home";
-  const selected =
-    pageViews.find((view) => view.id === requested) || pageViews[0];
-  pageViews.forEach((view) => {
-    view.hidden = view !== selected;
-  });
-  navLinks.forEach((link) => {
-    if (link.hash === `#${selected.id}`)
-      link.setAttribute("aria-current", "page");
-    else link.removeAttribute("aria-current");
-  });
-  closeMenu();
-  if (selected.id === "wall" && entryGate.hidden) void loadWall();
-  document.title =
-    selected.id === "home"
-      ? "stablelmao :p"
-      : `${selected.id === "about" ? "more about me" : selected.id === "wall" ? "comments wall" : selected.id} | stable!`;
-  if (moveFocus && entryGate.hidden) {
-    selected.querySelector("h1").focus({ preventScroll: true });
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }
-}
+siteNav.classList.add("is-enhanced");
+navToggle.hidden = false;
 navToggle.addEventListener("click", () => {
   const open = siteNav.classList.toggle("is-open");
   navToggle.setAttribute("aria-expanded", String(open));
@@ -65,18 +60,13 @@ siteNav.addEventListener("keydown", (event) => {
 document.addEventListener("click", (event) => {
   if (!siteNav.contains(event.target)) closeMenu();
 });
-navLinks.forEach((link) =>
-  link.addEventListener("click", () => {
-    if (
-      link.hash === location.hash ||
-      (!location.hash && link.hash === "#home")
-    )
-      showPage();
-  }),
-);
-window.addEventListener("hashchange", () => showPage());
-showPage(false);
+siteNav
+  .querySelectorAll("a")
+  .forEach((link) => link.addEventListener("click", saveSession));
+window.addEventListener("pagehide", saveSession);
 
+music.volume = 0.35;
+audioToggle.hidden = false;
 function updateAudio() {
   const playing = !music.paused && !music.muted;
   audioToggle.textContent = playing ? "[ music: on ]" : "[ music: off ]";
@@ -85,13 +75,6 @@ function updateAudio() {
     playing ? "Pause music" : "Play music",
   );
   audioToggle.setAttribute("aria-pressed", String(playing));
-}
-function enter() {
-  entryGate.hidden = true;
-  bio.inert = false;
-  siteNav.inert = false;
-  bio.classList.add("is-entered");
-  showPage();
 }
 async function playMusic() {
   if (starting) return;
@@ -103,135 +86,74 @@ async function playMusic() {
     await music.play();
     updateAudio();
   } catch {
-    audioToggle.textContent = "[ music: retry ]";
-    audioToggle.setAttribute("aria-label", "Retry playing music");
-    audioToggle.setAttribute("aria-pressed", "false");
+    updateAudio();
+    audioToggle.setAttribute("aria-label", "Play music");
   } finally {
     starting = false;
     audioToggle.disabled = false;
   }
 }
-startMusic.addEventListener("click", () => {
-  enter();
-  void playMusic();
-});
-enterSilent.addEventListener("click", enter);
 audioToggle.addEventListener("click", () => {
   if (music.paused) void playMusic();
   else music.pause();
 });
-music.addEventListener("play", updateAudio);
-music.addEventListener("pause", updateAudio);
+music.addEventListener("play", () => {
+  updateAudio();
+  saveSession();
+});
+music.addEventListener("pause", () => {
+  updateAudio();
+  saveSession();
+});
 music.addEventListener("volumechange", updateAudio);
 
-function renderWall(comments, hasMore = false) {
-  const fragment = document.createDocumentFragment();
-  for (const comment of comments) {
-    const article = document.createElement("article");
-    article.className = "wall-comment";
-    const header = document.createElement("header");
-    const author = document.createElement("span");
-    author.className = "wall-comment-author";
-    author.textContent = comment.name;
-    header.append(author);
-    const date = new Date(comment.createdAt);
-    if (!Number.isNaN(date.getTime())) {
-      const time = document.createElement("time");
-      time.dateTime = date.toISOString();
-      time.textContent = date.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      header.append(time);
-    }
-    const body = document.createElement("p");
-    body.textContent = comment.message;
-    article.append(header, body);
-    fragment.append(article);
+let internalArrival = false;
+try {
+  internalArrival = new URL(document.referrer).origin === location.origin;
+} catch {}
+function enter(moveFocus = true) {
+  if (entryGate) entryGate.hidden = true;
+  bio.inert = false;
+  siteNav.inert = false;
+  bio.classList.add("is-entered");
+  saveSession();
+  if (moveFocus)
+    document.querySelector("main h1")?.focus({ preventScroll: true });
+}
+if (entryGate && !saved.entered && !internalArrival) {
+  entryGate.hidden = false;
+  bio.inert = true;
+  siteNav.inert = true;
+  document.querySelector("#start-music").focus();
+  document.querySelector("#start-music").addEventListener("click", () => {
+    enter();
+    void playMusic();
+  });
+  document
+    .querySelector("#enter-silent")
+    .addEventListener("click", () => enter());
+} else {
+  enter(false);
+  if (Number.isFinite(saved.time) && saved.time > 0) {
+    music.addEventListener(
+      "loadedmetadata",
+      () => {
+        if (Number.isFinite(music.duration))
+          music.currentTime = Math.min(saved.time, music.duration);
+      },
+      { once: true },
+    );
   }
-  wallComments.replaceChildren(fragment);
-  wallStatus.textContent = comments.length
-    ? `${comments.length} ${comments.length === 1 ? "message" : "messages"}${hasMore ? " shown (latest 50)." : "."}`
-    : "no messages yet. be the first to say hi :)";
+  if (saved.playing) void playMusic();
 }
 
-async function loadWall(force = false) {
-  if (wallLoading || (!force && Date.now() - wallLoadedAt < 30000)) return;
-  wallLoading = true;
-  wallRefresh.disabled = true;
-  wallStatus.textContent = "loading messages...";
-  wallComments.setAttribute("aria-busy", "true");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
+// Reconcile controls when the browser restores a document from its back cache.
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted) return;
   try {
-    const response = await fetch("/api/comments", {
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    const data = await response.json();
-    if (!response.ok || !Array.isArray(data.comments))
-      throw new Error("Comments unavailable");
-    renderWall(data.comments, data.hasMore);
-    wallLoadedAt = Date.now();
-  } catch {
-    wallStatus.textContent =
-      "couldn't load messages right now. try refresh in a moment.";
-  } finally {
-    clearTimeout(timeout);
-    wallLoading = false;
-    wallRefresh.disabled = false;
-    wallComments.setAttribute("aria-busy", "false");
-  }
-}
-wallRefresh.addEventListener("click", () => {
-  void loadWall(true);
-});
-
-const wallForm = document.querySelector("#wall-form");
-const wallSubmit = document.querySelector("#wall-submit");
-const wallFormStatus = document.querySelector("#wall-form-status");
-wallForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (wallSubmit.disabled || !wallForm.reportValidity()) return;
-  const fields = new FormData(wallForm);
-  const payload = {
-    name: fields.get("name").trim(),
-    message: fields.get("message").trim(),
-    website: fields.get("website"),
-  };
-  if (!payload.name || !payload.message) {
-    wallFormStatus.textContent = "add your name and a message first.";
-    return;
-  }
-  wallSubmit.disabled = true;
-  wallSubmit.textContent = "[ posting... ]";
-  wallFormStatus.textContent = "";
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25000);
-  try {
-    const response = await fetch("/api/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      wallFormStatus.textContent =
-        data.error || "couldn't post right now. try again.";
-      return;
-    }
-    wallForm.querySelector('[name="message"]').value = "";
-    wallFormStatus.textContent = "posted! thanks for stopping by :)";
-    wallLoadedAt = 0;
-    await loadWall(true);
-  } catch {
-    wallFormStatus.textContent =
-      "couldn't confirm the post. refresh the wall before trying again. your message is still here.";
-  } finally {
-    clearTimeout(timeout);
-    wallSubmit.disabled = false;
-    wallSubmit.textContent = "[ post comment ]";
-  }
+    const latest = JSON.parse(sessionStorage.getItem(sessionKey) || "{}");
+    if (!latest.playing) music.pause();
+  } catch {}
+  closeMenu();
+  updateAudio();
 });

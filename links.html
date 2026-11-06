@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>links | stable!</title>
+    <meta name="description" content="find me and the stuff i'm working on." />
+    <meta name="theme-color" content="#ff8de9" />
+    <link rel="canonical" href="https://aidan.im/links" />
+    <meta property="og:title" content="links." />
+    <meta
+      property="og:description"
+      content="find me and the stuff i'm working on."
+    />
+    <meta property="og:url" content="https://aidan.im/links" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://aidan.im/preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/style.css?v=pages-4" />
+    <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+  </head>
+  <body data-page="links">
+    <audio id="music" loop preload="none">
+      <source src="/music/song.mp3" type="audio/mpeg" />
+    </audio>
+
+    <nav class="floating-nav" id="site-nav" aria-label="Main navigation">
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="nav-items"
+        hidden
+      >
+        [ menu ]
+      </button>
+      <a class="nav-brand" href="/" aria-label="stable! home">stable!</a>
+      <div class="nav-items" id="nav-items">
+        <a href="/portfolio">portfolio</a>
+        <a href="/about">more about me</a>
+        <a href="/links" aria-current="page">links</a>
+        <a href="/wall">comments wall</a>
+      </div>
+    </nav>
+    <main id="bio">
+      <section
+        class="page-view detail-view"
+        id="links"
+        aria-labelledby="links-title"
+      >
+        <h1 id="links-title" tabindex="-1">links.</h1>
+        <p class="view-lead">find me and the stuff i'm working on.</p>
+        <a
+          class="project-link"
+          href="https://github.com/stablelmao"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="project-name"
+            >github <span aria-hidden="true">↗</span></span
+          >
+          <span class="project-description">@stablelmao</span>
+        </a>
+      </section>
+      <footer class="site-footer">
+        <a
+          href="https://github.com/stablelmao/bio"
+          target="_blank"
+          rel="noopener noreferrer"
+          >[ source code ]</a
+        >
+        <button
+          class="audio-toggle"
+          id="audio-toggle"
+          type="button"
+          aria-label="Play music"
+          aria-pressed="false"
+          hidden
+        >
+          [ music: off ]
+        </button>
+      </footer>
+    </main>
+    <script src="/main.js?v=pages-4"></script>
+  </body>
+</html>

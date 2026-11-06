@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>comments wall | stable!</title>
+    <meta
+      name="description"
+      content="you were here. leave a little something :)"
+    />
+    <meta name="theme-color" content="#ff8de9" />
+    <link rel="canonical" href="https://aidan.im/wall" />
+    <meta property="og:title" content="comments wall." />
+    <meta
+      property="og:description"
+      content="you were here. leave a little something :)"
+    />
+    <meta property="og:url" content="https://aidan.im/wall" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://aidan.im/preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/style.css?v=pages-4" />
+    <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+  </head>
+  <body data-page="wall">
+    <audio id="music" loop preload="none">
+      <source src="/music/song.mp3" type="audio/mpeg" />
+    </audio>
+
+    <nav class="floating-nav" id="site-nav" aria-label="Main navigation">
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="nav-items"
+        hidden
+      >
+        [ menu ]
+      </button>
+      <a class="nav-brand" href="/" aria-label="stable! home">stable!</a>
+      <div class="nav-items" id="nav-items">
+        <a href="/portfolio">portfolio</a>
+        <a href="/about">more about me</a>
+        <a href="/links">links</a>
+        <a href="/wall" aria-current="page">comments wall</a>
+      </div>
+    </nav>
+    <main id="bio">
+      <section
+        class="page-view detail-view"
+        id="wall"
+        aria-labelledby="wall-title"
+      >
+        <h1 id="wall-title" tabindex="-1">comments wall.</h1>
+        <p class="view-lead">you were here. leave a little something :)</p>
+        <noscript
+          ><p>turn on javascript to post and read comments.</p>
+          <style>
+            .wall-form {
+              display: none;
+            }
+          </style></noscript
+        >
+        <form
+          class="wall-form"
+          id="wall-form"
+          method="post"
+          action="/api/comments"
+        >
+          <label for="wall-name">your name</label>
+          <input
+            id="wall-name"
+            name="name"
+            maxlength="32"
+            required
+            autocomplete="nickname"
+            placeholder="what should we call you?"
+          />
+          <label for="wall-message">your message</label>
+          <textarea
+            id="wall-message"
+            name="message"
+            rows="4"
+            maxlength="1000"
+            required
+            placeholder="say hi, leave a thought, whatever :)"
+            aria-describedby="wall-help"
+          ></textarea>
+          <div class="wall-honeypot" aria-hidden="true">
+            <label for="wall-website">leave this empty</label
+            ><input
+              id="wall-website"
+              name="website"
+              tabindex="-1"
+              autocomplete="off"
+            />
+          </div>
+          <p class="wall-help" id="wall-help">
+            no account needed. names aren't verified. your name and message will
+            be public.
+          </p>
+          <button
+            class="wall-submit entry-button"
+            id="wall-submit"
+            type="submit"
+          >
+            [ post comment ]
+          </button>
+          <p id="wall-form-status" role="status" aria-live="polite"></p>
+        </form>
+        <div class="wall-actions">
+          <button
+            class="wall-refresh quiet-button"
+            id="wall-refresh"
+            type="button"
+          >
+            [ refresh ]
+          </button>
+        </div>
+        <p id="wall-status" role="status">open the wall to load messages.</p>
+        <div
+          id="wall-comments"
+          class="wall-comments"
+          aria-label="Visitor comments"
+        ></div>
+      </section>
+      <footer class="site-footer">
+        <a
+          href="https://github.com/stablelmao/bio"
+          target="_blank"
+          rel="noopener noreferrer"
+          >[ source code ]</a
+        >
+        <button
+          class="audio-toggle"
+          id="audio-toggle"
+          type="button"
+          aria-label="Play music"
+          aria-pressed="false"
+          hidden
+        >
+          [ music: off ]
+        </button>
+      </footer>
+    </main>
+    <script src="/main.js?v=pages-4"></script>
+    <script src="/wall.js?v=pages-4"></script>
+  </body>
+</html>

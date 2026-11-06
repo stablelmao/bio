@@ -614,3 +614,17 @@ ul {
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+/* Native cross-document transitions; every destination is still a real page. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
