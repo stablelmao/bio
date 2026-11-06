@@ -16,7 +16,7 @@
       content="stable! unity dev, beginning coder, and learning as i go."
     />
     <title>stablelmao :p</title>
-    <link rel="stylesheet" href="style.css?v=wall-nav-2" />
+    <link rel="stylesheet" href="style.css?v=wall-posting-3" />
     <noscript
       ><style>
         .page-view[hidden] {
@@ -185,14 +185,54 @@
       >
         <h1 id="wall-title" tabindex="-1">comments wall.</h1>
         <p class="view-lead">you were here. leave a little something :)</p>
-        <div class="wall-actions">
-          <a
-            class="wall-write"
-            href="https://github.com/stablelmao/bio/issues/2#new_comment_field"
-            target="_blank"
-            rel="noopener noreferrer"
-            >[ leave a comment ]</a
+        <form
+          class="wall-form"
+          id="wall-form"
+          method="post"
+          action="/api/comments"
+        >
+          <label for="wall-name">your name</label>
+          <input
+            id="wall-name"
+            name="name"
+            maxlength="32"
+            required
+            autocomplete="nickname"
+            placeholder="what should we call you?"
+          />
+          <label for="wall-message">your message</label>
+          <textarea
+            id="wall-message"
+            name="message"
+            rows="4"
+            maxlength="1000"
+            required
+            placeholder="say hi, leave a thought, whatever :)"
+            aria-describedby="wall-help"
+          ></textarea>
+          <div class="wall-honeypot" aria-hidden="true">
+            <label for="wall-website">leave this empty</label
+            ><input
+              id="wall-website"
+              name="website"
+              tabindex="-1"
+              autocomplete="off"
+            />
+          </div>
+          <p class="wall-help" id="wall-help">
+            no account needed. names aren't verified. your name and message will
+            be public.
+          </p>
+          <button
+            class="wall-submit entry-button"
+            id="wall-submit"
+            type="submit"
           >
+            [ post comment ]
+          </button>
+          <p id="wall-form-status" role="status" aria-live="polite"></p>
+        </form>
+        <div class="wall-actions">
           <button
             class="wall-refresh quiet-button"
             id="wall-refresh"
@@ -201,22 +241,12 @@
             [ refresh ]
           </button>
         </div>
-        <p class="wall-help">
-          comments are public. sign in with github to post.
-        </p>
         <p id="wall-status" role="status">open the wall to load messages.</p>
         <div
           id="wall-comments"
           class="wall-comments"
           aria-label="Visitor comments"
         ></div>
-        <a
-          class="wall-thread"
-          href="https://github.com/stablelmao/bio/issues/2"
-          target="_blank"
-          rel="noopener noreferrer"
-          >[ view the full thread on github ]</a
-        >
       </section>
 
       <footer class="site-footer">
@@ -239,6 +269,6 @@
       </footer>
     </main>
 
-    <script src="main.js?v=wall-nav-2"></script>
+    <script src="main.js?v=wall-posting-3"></script>
   </body>
 </html>

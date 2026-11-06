@@ -124,68 +124,59 @@ music.addEventListener("play", updateAudio);
 music.addEventListener("pause", updateAudio);
 music.addEventListener("volumechange", updateAudio);
 
+function renderWall(comments, hasMore = false) {
+  const fragment = document.createDocumentFragment();
+  for (const comment of comments) {
+    const article = document.createElement("article");
+    article.className = "wall-comment";
+    const header = document.createElement("header");
+    const author = document.createElement("span");
+    author.className = "wall-comment-author";
+    author.textContent = comment.name;
+    header.append(author);
+    const date = new Date(comment.createdAt);
+    if (!Number.isNaN(date.getTime())) {
+      const time = document.createElement("time");
+      time.dateTime = date.toISOString();
+      time.textContent = date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      header.append(time);
+    }
+    const body = document.createElement("p");
+    body.textContent = comment.message;
+    article.append(header, body);
+    fragment.append(article);
+  }
+  wallComments.replaceChildren(fragment);
+  wallStatus.textContent = comments.length
+    ? `${comments.length} ${comments.length === 1 ? "message" : "messages"}${hasMore ? " shown (latest 50)." : "."}`
+    : "no messages yet. be the first to say hi :)";
+}
+
 async function loadWall(force = false) {
-  if (wallLoading || (!force && Date.now() - wallLoadedAt < 60000)) return;
+  if (wallLoading || (!force && Date.now() - wallLoadedAt < 30000)) return;
   wallLoading = true;
   wallRefresh.disabled = true;
   wallStatus.textContent = "loading messages...";
   wallComments.setAttribute("aria-busy", "true");
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  const timeout = setTimeout(() => controller.abort(), 20000);
   try {
-    const response = await fetch(
-      "https://api.github.com/repos/stablelmao/bio/issues/2/comments?per_page=100",
-      {
-        headers: { Accept: "application/vnd.github+json" },
-        signal: controller.signal,
-      },
-    );
-    if (!response.ok) throw new Error("Comments unavailable");
-    const comments = await response.json();
-    if (!Array.isArray(comments)) throw new Error("Invalid comments");
-    const fragment = document.createDocumentFragment();
-    for (const comment of [...comments].reverse()) {
-      if (
-        !comment.user ||
-        !/^[a-zA-Z0-9-]+$/.test(comment.user.login) ||
-        !Number.isSafeInteger(comment.id)
-      )
-        continue;
-      const article = document.createElement("article");
-      article.className = "wall-comment";
-      const header = document.createElement("header");
-      const author = document.createElement("a");
-      author.className = "wall-comment-author";
-      author.href = `https://github.com/${comment.user.login}`;
-      author.target = "_blank";
-      author.rel = "noopener noreferrer";
-      author.textContent = `@${comment.user.login}`;
-      header.append(author);
-      const date = new Date(comment.created_at);
-      if (!Number.isNaN(date.getTime())) {
-        const time = document.createElement("time");
-        time.dateTime = date.toISOString();
-        time.textContent = date.toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        });
-        header.append(time);
-      }
-      const body = document.createElement("p");
-      body.textContent = String(comment.body || "").slice(0, 10000);
-      article.append(header, body);
-      fragment.append(article);
-    }
-    const count = fragment.childElementCount;
-    wallComments.replaceChildren(fragment);
-    wallStatus.textContent = count
-      ? `${count} ${count === 1 ? "message" : "messages"}${comments.length === 100 ? " shown. see the full thread for more." : "."}`
-      : "no messages yet. be the first to say hi :)";
+    const response = await fetch("/api/comments", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const data = await response.json();
+    if (!response.ok || !Array.isArray(data.comments))
+      throw new Error("Comments unavailable");
+    renderWall(data.comments, data.hasMore);
     wallLoadedAt = Date.now();
   } catch {
     wallStatus.textContent =
-      "couldn't load messages right now. try refresh or open the github thread below.";
+      "couldn't load messages right now. try refresh in a moment.";
   } finally {
     clearTimeout(timeout);
     wallLoading = false;
@@ -195,4 +186,52 @@ async function loadWall(force = false) {
 }
 wallRefresh.addEventListener("click", () => {
   void loadWall(true);
+});
+
+const wallForm = document.querySelector("#wall-form");
+const wallSubmit = document.querySelector("#wall-submit");
+const wallFormStatus = document.querySelector("#wall-form-status");
+wallForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (wallSubmit.disabled || !wallForm.reportValidity()) return;
+  const fields = new FormData(wallForm);
+  const payload = {
+    name: fields.get("name").trim(),
+    message: fields.get("message").trim(),
+    website: fields.get("website"),
+  };
+  if (!payload.name || !payload.message) {
+    wallFormStatus.textContent = "add your name and a message first.";
+    return;
+  }
+  wallSubmit.disabled = true;
+  wallSubmit.textContent = "[ posting... ]";
+  wallFormStatus.textContent = "";
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+  try {
+    const response = await fetch("/api/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      wallFormStatus.textContent =
+        data.error || "couldn't post right now. try again.";
+      return;
+    }
+    wallForm.querySelector('[name="message"]').value = "";
+    wallFormStatus.textContent = "posted! thanks for stopping by :)";
+    wallLoadedAt = 0;
+    await loadWall(true);
+  } catch {
+    wallFormStatus.textContent =
+      "couldn't confirm the post. refresh the wall before trying again. your message is still here.";
+  } finally {
+    clearTimeout(timeout);
+    wallSubmit.disabled = false;
+    wallSubmit.textContent = "[ post comment ]";
+  }
 });
