@@ -9,8 +9,8 @@ module.exports = async function handler(req, res) {
   if (mode === 'search' && !process.env.YOUTUBE_API_KEY) return res.status(503).json({ error: 'YOUTUBE_API_KEY is not configured in Vercel. Enable YouTube Data API v3 and add the key as a production environment variable.' });
   let url;
   if (mode === 'probe') {
-    url = new URL('https://www.youtube.com/oembed');
-    url.search = new URLSearchParams({ url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', format: 'json' }).toString();
+    url = new URL('https://www.googleapis.com/youtube/v3/videos');
+    url.search = new URLSearchParams({ part: 'id', id: 'M7lc1UVf-VE' }).toString();
   } else {
     const q = String(req.query.q || '').trim().slice(0, 100);
     if (!q) return res.status(400).json({ error: 'Enter a search term.' });
@@ -20,11 +20,12 @@ module.exports = async function handler(req, res) {
   try {
     const upstream = await fetch(url, { signal: AbortSignal.timeout(10000) });
     const data = await upstream.json().catch(() => ({}));
-    if (!upstream.ok) return res.status(502).json({ error: `YouTube responded HTTP ${upstream.status}: ${String(data.error?.message || data.error || 'upstream request failed').slice(0, 300)}`, upstreamStatus: upstream.status });
     if (mode === 'probe') {
-      if (typeof data.title !== 'string') return res.status(502).json({ error: 'YouTube returned HTTP 200 but not a valid oEmbed response. An intermediary or consent page may be interfering.' });
-      return res.status(200).json({ ok: true, message: 'The server reached YouTube oEmbed.', title: data.title, note: 'This tests server connectivity, not playback or the YouTube Data API key.' });
+      const message = typeof data.error?.message === 'string' ? data.error.message : '';
+      if ((upstream.status === 400 || upstream.status === 403) && /api key|credential|unauthenticated/i.test(message)) return res.status(200).json({ ok: true, message: `Google API responded HTTP ${upstream.status}: ${message.slice(0, 250)}`, note: 'This key-free connectivity check does not verify search, a valid API key, or playback.' });
+      return res.status(502).json({ error: `Unexpected YouTube Data API response (HTTP ${upstream.status}): ${message ? message.slice(0, 250) : 'No recognizable Google API error returned.'}` });
     }
+    if (!upstream.ok) return res.status(502).json({ error: `YouTube responded HTTP ${upstream.status}: ${String(data.error?.message || data.error || 'upstream request failed').slice(0, 300)}`, upstreamStatus: upstream.status });
     return res.status(200).json({ results: (data.items || []).filter(item => item.id?.videoId).map(item => ({ id: item.id.videoId, title: item.snippet?.title || 'Untitled', channel: item.snippet?.channelTitle || '' })) });
   } catch (error) {
     return res.status(502).json({ error: error.name === 'TimeoutError' ? 'YouTube request timed out after 10 seconds.' : `Server could not reach YouTube: ${error.message}` });
