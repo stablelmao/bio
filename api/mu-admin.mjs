@@ -1,7 +1,7 @@
 import { get, put } from '@vercel/blob';
 import { pbkdf2Sync, timingSafeEqual, createHmac, randomBytes, createHash } from 'node:crypto';
 const json=(data,status=200,headers={})=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
-const path='mu/developer-picks.json';
+const path='mu/developer-picks-hifi.json';
 const sign=s=>createHmac('sha256',process.env.MU_SESSION_SECRET).update(s).digest('base64url');
 function authorized(req){const cookie=req.headers.get('cookie')?.match(/(?:^|;\s*)mu_admin=([^;]+)/)?.[1];if(!cookie||!process.env.MU_SESSION_SECRET)return false;const [exp,nonce,sig]=cookie.split('.');if(!exp||!nonce||!sig||Number(exp)<Date.now())return false;const expected=Buffer.from(sign(`${exp}.${nonce}`)),actual=Buffer.from(sig);return expected.length===actual.length&&timingSafeEqual(expected,actual)}
 async function readPicks(){const result=await get(path,{access:'private',useCache:false});if(!result||result.statusCode!==200)return [];const data=await new Response(result.stream).json();return Array.isArray(data.tracks)?data.tracks:[]}
@@ -26,7 +26,7 @@ export async function POST(req){
  if(data.action==='logout')return json({ok:true},200,{'Set-Cookie':'mu_admin=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0'});
  if(!authorized(req))return json({error:'Sign in first.'},401);
  if(data.action!=='save'||!Array.isArray(data.tracks)||data.tracks.length>100)return json({error:'Invalid playlist.'},400);
- const tracks=[];for(const t of data.tracks){if(!t||typeof t.id!=='string'||!/^[A-Za-z0-9_-]{11}$/.test(t.id)||typeof t.title!=='string'||typeof t.channel!=='string')return json({error:'Invalid track.'},400);tracks.push({id:t.id,title:t.title.slice(0,200),channel:t.channel.slice(0,120)})}
+ const tracks=[];for(const t of data.tracks){if(!t||typeof t.id!=='string'||!/^\d{1,15}$/.test(t.id)||typeof t.title!=='string'||typeof t.channel!=='string')return json({error:'Invalid track.'},400);tracks.push({id:t.id,title:t.title.slice(0,200),channel:t.channel.slice(0,120)})}
  await put(path,JSON.stringify({tracks}),{access:'private',addRandomSuffix:false,allowOverwrite:true,contentType:'application/json'});return json({ok:true,tracks});
  }catch(e){console.error('Music admin request failed',e?.name);return json({error:'Storage unavailable. Try again.'},503)}
 }
