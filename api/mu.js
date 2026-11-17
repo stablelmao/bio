@@ -21,7 +21,10 @@ module.exports = async function handler(req, res) {
     const upstream = await fetch(url, { signal: AbortSignal.timeout(10000) });
     const data = await upstream.json().catch(() => ({}));
     if (!upstream.ok) return res.status(502).json({ error: `YouTube responded HTTP ${upstream.status}: ${String(data.error?.message || data.error || 'upstream request failed').slice(0, 300)}`, upstreamStatus: upstream.status });
-    if (mode === 'probe') return res.status(200).json({ ok: true, message: 'The server reached YouTube oEmbed.', title: data.title || null, note: 'This tests server connectivity, not playback or the YouTube Data API key.' });
+    if (mode === 'probe') {
+      if (typeof data.title !== 'string') return res.status(502).json({ error: 'YouTube returned HTTP 200 but not a valid oEmbed response. An intermediary or consent page may be interfering.' });
+      return res.status(200).json({ ok: true, message: 'The server reached YouTube oEmbed.', title: data.title, note: 'This tests server connectivity, not playback or the YouTube Data API key.' });
+    }
     return res.status(200).json({ results: (data.items || []).filter(item => item.id?.videoId).map(item => ({ id: item.id.videoId, title: item.snippet?.title || 'Untitled', channel: item.snippet?.channelTitle || '' })) });
   } catch (error) {
     return res.status(502).json({ error: error.name === 'TimeoutError' ? 'YouTube request timed out after 10 seconds.' : `Server could not reach YouTube: ${error.message}` });
