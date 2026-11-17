@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
     const q = String(req.query.q || '').trim().slice(0, 100);
     if (!q) return res.status(400).json({ error: 'Enter a search term.' });
     url = new URL('https://www.googleapis.com/youtube/v3/search');
-    url.search = new URLSearchParams({ part: 'snippet', type: 'video', videoEmbeddable: 'true', maxResults: '8', q, key: process.env.YOUTUBE_API_KEY }).toString();
+    url.search = new URLSearchParams({ part: 'snippet', type: 'video', videoEmbeddable: 'true', videoCategoryId: '10', maxResults: '16', q, key: process.env.YOUTUBE_API_KEY }).toString();
   }
   try {
     const upstream = await fetch(url, { signal: AbortSignal.timeout(10000) });
