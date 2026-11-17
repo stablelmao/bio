@@ -26,7 +26,7 @@ export async function POST(req){
  if(data.action==='logout')return json({ok:true},200,{'Set-Cookie':'mu_admin=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0'});
  if(!authorized(req))return json({error:'Sign in first.'},401);
  if(data.action!=='save'||!Array.isArray(data.tracks)||data.tracks.length>100)return json({error:'Invalid playlist.'},400);
- const tracks=[];for(const t of data.tracks){if(!t||typeof t.id!=='string'||!/^\d{1,15}$/.test(t.id)||typeof t.title!=='string'||typeof t.channel!=='string')return json({error:'Invalid track.'},400);tracks.push({id:t.id,title:t.title.slice(0,200),channel:t.channel.slice(0,120)})}
+ const tracks=[];for(const t of data.tracks){if(!t||typeof t.id!=='string'||!/^\d{1,15}$/.test(t.id)||typeof t.title!=='string'||typeof t.channel!=='string')return json({error:'Invalid track.'},400);tracks.push({id:t.id,title:t.title.slice(0,200),channel:t.channel.slice(0,120),album:typeof t.album==='string'?t.album.slice(0,200):'',cover:typeof t.cover==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t.cover)?t.cover:'',duration:Number.isFinite(t.duration)&&t.duration>=0?Math.min(t.duration,86400):0})}
  await put(path,JSON.stringify({tracks}),{access:'private',addRandomSuffix:false,allowOverwrite:true,contentType:'application/json'});return json({ok:true,tracks});
  }catch(e){console.error('Music admin request failed',e?.name);return json({error:'Storage unavailable. Try again.'},503)}
 }

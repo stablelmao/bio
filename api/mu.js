@@ -23,13 +23,20 @@ module.exports = async function handler(req,res){
  let host;try{host=new URL(base);if(host.protocol!=='https:'||host.username||host.password)throw Error()}catch{return res.status(503).json({error:'Music service configuration is invalid.'})}
  const mode=String(req.query.mode||'health');if(mode==='health')return res.status(200).json({ok:true,configured:true});
  try{
+  if(mode==='cover'){
+   const id=String(req.query.id||'');if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))return res.status(400).json({error:'Invalid cover.'});
+   const image=await fetch('https://resources.tidal.com/images/'+id.replace(/-/g,'/')+'/320x320.jpg',{redirect:'error',signal:AbortSignal.timeout(15000)});
+   if(!image.ok)return res.status(404).json({error:'Cover unavailable.'});
+   const type=image.headers.get('content-type')||'';if(!type.startsWith('image/'))return res.status(502).json({error:'Invalid cover response.'});
+   res.setHeader('Content-Type',type);res.setHeader('Cache-Control','public, max-age=3600, s-maxage=86400');res.statusCode=200;Readable.fromWeb(image.body).on('error',()=>res.destroy()).pipe(res);return;
+  }
   if(mode==='segment'){
    let media;try{media=unseal(String(req.query.token||''))}catch{return res.status(400).json({error:'Invalid or expired audio segment.'})}
    const upstream=await fetch(media,{redirect:'error',signal:AbortSignal.timeout(30000)});if(!upstream.ok)return res.status(502).json({error:'Audio segment unavailable.'});const len=Number(upstream.headers.get('content-length'));if(len>4*1024*1024)return res.status(502).json({error:'Audio segment is too large.'});res.setHeader('Content-Type','audio/mp4');res.statusCode=200;Readable.fromWeb(upstream.body).on('error',()=>res.destroy()).pipe(res);return;
   }
   let url;if(mode==='search'){const q=String(req.query.q||'').trim().slice(0,100);if(!q)return res.status(400).json({error:'Enter a search term.'});url=new URL('/search/',host);url.searchParams.set('s',q)}else if(mode==='audio'||mode==='manifest'){const id=String(req.query.id||'');if(!/^\d{1,15}$/.test(id))return res.status(400).json({error:'Invalid track.'});url=new URL('/track/',host);url.searchParams.set('id',id);url.searchParams.set('quality','HIGH')}else return res.status(400).json({error:'Unknown request.'});
   const upstream=await fetch(url,{headers:{Authorization:`Bearer ${process.env.HIFI_API_SECRET}`},redirect:'error',signal:AbortSignal.timeout(90000)});if(upstream.status===202)return res.status(503).json({error:'The music service is busy. Try again shortly.'});if(!upstream.ok)return res.status(502).json({error:`Music service returned HTTP ${upstream.status}.`});
-  const body=await upstream.json();if(mode==='search'){const items=body?.data?.items;if(!Array.isArray(items))return res.status(502).json({error:'Unexpected search response.'});return res.status(200).json({results:items.filter(t=>/^\d{1,15}$/.test(String(t.id))).slice(0,20).map(t=>({id:String(t.id),title:String(t.title||'Untitled').slice(0,200),channel:String(t.artist?.name||t.artists?.[0]?.name||'Unknown artist').slice(0,120)}))})}
+  const body=await upstream.json();if(mode==='search'){const items=body?.data?.items;if(!Array.isArray(items))return res.status(502).json({error:'Unexpected search response.'});return res.status(200).json({results:items.filter(t=>/^\d{1,15}$/.test(String(t.id))).slice(0,20).map(t=>({id:String(t.id),title:String(t.title||'Untitled').slice(0,200),channel:String(t.artist?.name||t.artists?.[0]?.name||'Unknown artist').slice(0,120),album:String(t.album?.title||'').slice(0,200),cover:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(t.album?.cover||''))?String(t.album.cover):'',duration:Number.isFinite(t.duration)?t.duration:0}))})}
   const manifest=body?.data?.manifest,type=body?.data?.manifestMimeType;if(typeof manifest!=='string')return res.status(502).json({error:'Invalid audio manifest.'});
   if(type==='application/dash+xml'){
     if(mode!=='manifest')return res.status(400).json({error:'Segmented playback required.'});
