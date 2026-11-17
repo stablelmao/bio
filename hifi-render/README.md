@@ -1,0 +1,3 @@
+# HiFi service
+
+Render service source for mu. `build.sh` obtains a pinned release of binimum/hifi-api and installs its dependencies. Start with `uvicorn server:app --app-dir hifi-render --host 0.0.0.0 --port $PORT`. `/health` is public; `/search/` and `/track/` require the matching `HIFI_API_SECRET` bearer token and all other routes are rejected. Configure Tidal credentials through Render environment variables; do not commit credentials. Free Render services can spin down and use ephemeral disk, so use environment variables instead of a token file and verify refresh behavior. No Tidal credentials are included.
