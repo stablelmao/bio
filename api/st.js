@@ -5,9 +5,7 @@ module.exports = async (req, res) => {
   if (mode === 'player') {
     const id = String(req.query.id || '');
     if (!/^\d{1,10}$/.test(id)) return res.status(400).json({error:'Invalid movie ID.'});
-    if (!process.env.NEXSTREAM_API_KEY) return res.status(503).json({error:'NexStream is not configured.'});
-    const u = new URL(`https://api.codespecters.com/embed/movie/${id}`);
-    u.searchParams.set('apikey', process.env.NEXSTREAM_API_KEY);
+    const u = new URL(`https://vidsrc.sh/embed/movie/${id}`);
     res.setHeader('Cache-Control','no-store');
     return res.status(200).json({url:u.toString()});
   }
