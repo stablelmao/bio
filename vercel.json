@@ -1,18 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
-  "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/embed/movie/:id(\\d+|tt\\d+)",
-      "has": [
-        {
-          "type": "host",
-          "value": "stream.aidan.im"
-        }
-      ],
-      "destination": "https://vidsrc.sh/embed/movie/:id",
-      "permanent": false
-    }
-  ]
+  "trailingSlash": false
 }
