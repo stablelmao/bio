@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
   if (mode === 'player') {
     const id = String(req.query.id || '');
     if (!/^\d{1,10}$/.test(id)) return res.status(400).json({error:'Invalid movie ID.'});
-    const u = new URL(`https://vidsrc.sh/embed/movie/${id}`);
+    const u = new URL(`https://stream.aidan.im/embed/movie/${id}`);
     res.setHeader('Cache-Control','no-store');
     return res.status(200).json({url:u.toString()});
   }
