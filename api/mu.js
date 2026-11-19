@@ -19,6 +19,16 @@ function dashSegments(xml){
 module.exports = async function handler(req,res){
  res.setHeader('Access-Control-Allow-Origin','https://aidan.im');res.setHeader('Vary','Origin');res.setHeader('Cache-Control','no-store');
  if(req.method!=='GET')return res.status(405).json({error:'Method not allowed.'});
+ if (req.query.mode === 'chart') {
+   try {
+     const response = await fetch('https://rss.marketingtools.apple.com/api/v2/us/music/most-played/50/songs.json', {signal:AbortSignal.timeout(4000)});
+     if (!response.ok) throw Error('Chart unavailable');
+     const data = await response.json();
+     const artists = [...new Set(data.feed.results.map(song => song.artistName).filter(name => typeof name === 'string' && name.length <= 100))];
+     res.setHeader('Cache-Control','public, max-age=3600, s-maxage=21600');
+     return res.status(200).json({artists});
+   } catch { return res.status(503).json({error:'Chart unavailable.'}); }
+ }
  const base=process.env.HIFI_API_URL;if(!base||!process.env.HIFI_API_SECRET)return res.status(503).json({error:'Music service is not connected yet.'});
  let host;try{host=new URL(base);if(host.protocol!=='https:'||host.username||host.password)throw Error()}catch{return res.status(503).json({error:'Music service configuration is invalid.'})}
  const mode=String(req.query.mode||'health');if(mode==='health')return res.status(200).json({ok:true,configured:true});

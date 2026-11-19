@@ -7,7 +7,9 @@
 <meta name="robots" content="noindex,nofollow">
 <title>mu(sic) • aidan.im</title>
 <link rel="stylesheet" href="/style.css?v=picks-1">
-<link rel="stylesheet" href="/mu-player.css?v=7">
+<link rel="stylesheet" href="/mu-player.css?v=radio-1">
+<link rel="stylesheet" href="/media-menu.css?v=1">
+<script src="/media-menu.js?v=1" defer></script>
 </head>
 <body class="media-page music-page" data-page="music">
 
@@ -37,17 +39,25 @@
   <a href="/mu">mu(sic)</a>, a branch of
   <a href="/"><span>aidan.im</span></a>
 </div>
-<button id="libraryTab" class="media-link">[ your playlists ]</button>
+<a class="media-link" href="/">[ back home ]</a>
 </header>
 <section class="media-heading">
 <h1>soundtrack<br>
 <em>your day.</em>
 </h1>
 </section>
-<div class="layout">
+<div class="discovery-layout">
+<nav class="discovery-nav" aria-label="Music library">
+<button class="menu-toggle" type="button" aria-expanded="false" aria-controls="music-menu">Music menu</button>
+<div id="music-menu" class="menu-items">
+<a href="#discover">Discover radio</a><a href="#now">Now playing</a><a href="#songSearch">Search</a>
+<a href="#curators">Developer’s picks</a><a href="#library">Your playlists</a>
+</div>
+</nav>
+<div class="discovery-body"><div class="layout">
 <div class="left-column">
 <p class="warmup">The first song search/play can take like a minute or two so the streaming service can wake up!</p>
-<section class="media-panel player-card" aria-label="Now playing">
+<section id="now" class="media-panel player-card" aria-label="Now playing">
 <div class="track-head">
 <div class="cover" id="cover">
 <span>mu!</span>
@@ -97,7 +107,7 @@
 <p class="hint" id="playerStatus" role="status">
 </p>
 </section>
-<section class="media-panel picks">
+<section id="curators" class="media-panel picks">
 <div class="row-title">
 <div>
 <h2>developer's picks<span>.</span>
@@ -131,6 +141,11 @@
 </div>
 </div>
 </section>
+<section class="media-panel" id="discover">
+<div class="row-title"><h2>discover radio<span>.</span></h2><button type="button" id="playRadio">Play radio</button></div>
+<p class="hint" id="radioStatus" role="status"></p>
+<div id="radioList"></div><button type="button" id="moreSongs">More songs</button>
+</section>
 <section class="media-panel library" id="library">
 <div class="row-title">
 <h2>your playlists<span>.</span></h2>
@@ -142,8 +157,9 @@
 </section>
 </div>
 </div>
+</div></div>
 </main>
-<script src="/mu-player.js?v=7" defer>
+<script src="/mu-player.js?v=radio-1" defer>
 </script>
 
 </body>

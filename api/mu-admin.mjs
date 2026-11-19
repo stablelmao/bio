@@ -3,7 +3,7 @@ import { pbkdf2Sync, timingSafeEqual, createHmac, randomBytes, createHash } from
 const json=(data,status=200,headers={})=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
 const path='mu/developer-picks-hifi.json';
 const sign=s=>createHmac('sha256',process.env.MU_SESSION_SECRET).update(s).digest('base64url');
-function authorized(req){const cookie=req.headers.get('cookie')?.match(/(?:^|;\s*)mu_admin=([^;]+)/)?.[1];if(!cookie||!process.env.MU_SESSION_SECRET)return false;const [exp,nonce,sig]=cookie.split('.');if(!exp||!nonce||!sig||Number(exp)<Date.now())return false;const expected=Buffer.from(sign(`${exp}.${nonce}`)),actual=Buffer.from(sig);return expected.length===actual.length&&timingSafeEqual(expected,actual)}
+import { ownerSignedIn as authorized } from '../lib/owner-session.mjs';
 async function readPicks(){const result=await get(path,{access:'private',useCache:false});if(!result||result.statusCode!==200)return [];const data=await new Response(result.stream).json();return Array.isArray(data.tracks)?data.tracks:[]}
 export async function GET(req){try{if(new URL(req.url).searchParams.get('session')==='1')return json({authenticated:authorized(req)});return json({tracks:await readPicks()})}catch{return json({error:'Could not load Developer’s Picks.'},503)}}
 export async function POST(req){

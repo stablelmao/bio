@@ -6,8 +6,10 @@
   <meta name="theme-color" content="#21071e">
   <title>movies &amp; TV • aidan.im</title>
   <link rel="stylesheet" href="/style.css?v=picks-1">
-  <link rel="stylesheet" href="/st.css?v=collections-6">
-  <script src="/st.js?v=collections-4" defer></script>
+  <link rel="stylesheet" href="/st.css?v=discovery-1">
+  <script src="/st.js?v=discovery-1" defer></script>
+  <link rel="stylesheet" href="/media-menu.css?v=1">
+  <script src="/media-menu.js?v=1" defer></script>
 </head>
 <body class="media-page stream-page" data-page="movies &amp; TV">
 <div class="shell">
@@ -20,6 +22,19 @@
 </header>
   <main>
     <div class="media-heading"><h1>movies <em>&amp; TV.</em></h1></div>
+    <div class="discovery-layout">
+    <nav class="discovery-nav" aria-label="Browse movies and TV">
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="catalog-menu">Browse menu</button>
+      <div class="menu-items" id="catalog-menu">
+        <button type="button" data-view="popular" aria-pressed="true">Popular</button>
+        <button type="button" data-view="new">New releases</button>
+        <button type="button" data-view="rated">Top rated</button>
+        <button type="button" data-view="history">Continue watching</button>
+        <button type="button" data-view="picks" id="picks">Jaiden’s picks</button>
+        <label for="genre">Genre</label><select id="genre"></select>
+      </div>
+    </nav>
+    <div class="discovery-body">
     <div class="media-types" role="group" aria-label="Browse by type">
       <button type="button" data-type="movie" aria-pressed="true">Movies</button>
       <button type="button" data-type="tv" aria-pressed="false">TV shows</button>
@@ -39,13 +54,11 @@
       <div class="player" id="player" hidden><iframe id="frame" title="Video player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
     </section>
     <section aria-labelledby="heading">
-      <div class="browse-options" role="group" aria-label="Choose a collection">
-        <button id="popular" type="button" aria-pressed="true">Popular</button>
-        <button id="picks" type="button" aria-pressed="false">Jaiden's picks</button>
-      </div>
       <h2 id="heading">Popular movies</h2><p id="status" class="hint" role="status"></p>
       <div id="results" class="grid"></div>
+      <button id="moreTitles" type="button" hidden>Load more titles</button>
     </section>
+    </div></div>
   </main>
   <footer>Player by VidSrc. This product uses the TMDB API but is not endorsed or certified by TMDB.</footer>
 </div>

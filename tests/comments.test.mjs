@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createCommentsHandler } from "../lib/comments.mjs";
@@ -16,7 +17,7 @@ function fixture() {
     },
     async get(path) {
       if (!objects.has(path)) return null;
-      return { statusCode: 200, stream: new Response(objects.get(path)).body };
+      return { statusCode: 200, blob: {etag: "current"}, stream: new Response(objects.get(path)).body };
     },
     async put(path, body, options) {
       assert.equal(options.access, "private");
@@ -158,4 +159,28 @@ test("only 50 latest messages are returned and private markers never leak", asyn
   assert.equal(data.comments[0].message, "54");
   assert.equal(data.comments.at(-1).message, "5");
   assert.equal(data.hasMore, true);
+});
+
+test("only an owner session can edit and delete an existing wall comment", async () => {
+  const { storage } = fixture();
+  const secret = "test-only-secret";
+  const handle = createCommentsHandler(storage, { BLOB_STORE_ID:"test", MU_SESSION_SECRET:secret });
+  const {comment} = await (await handle(post({name:"Visitor",message:"Original"}))).json();
+  const action = {action:"edit", id:comment.id, createdAt:comment.createdAt, original:comment.message, message:"Edited"};
+  const payload = (Date.now() + 60000) + ".nonce";
+  const signature = createHmac("sha256",secret).update(payload).digest("base64url");
+  function signed(data, key = "mu_admin") {
+    const req = post(data);
+    req.headers.set("cookie",key + "=" + payload + "." + signature);
+    return req;
+  }
+  assert.equal((await handle(post(action))).status,401);
+  assert.equal((await handle(signed(action, "st_jaiden"))).status,401);
+  assert.equal((await handle(signed({...action, id:"../other"}))).status,400);
+  assert.equal((await handle(signed({...action, message:" "}))).status,400);
+  assert.equal((await handle(signed(action))).status,200);
+  assert.deepEqual((await (await handle(read())).json()).comments, [{...comment,message:"Edited"}]);
+  assert.equal((await handle(signed({...action,action:"delete"}))).status,409);
+  assert.equal((await handle(signed({...action,action:"delete",original:"Edited"}))).status,200);
+  assert.deepEqual((await (await handle(read())).json()).comments,[]);
 });

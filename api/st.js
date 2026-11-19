@@ -34,12 +34,37 @@ module.exports = async (req, res) => {
   if (!key) return res.status(503).json({error:'TMDB is not configured.'});
   const q = String(req.query.q || '').trim().slice(0,100);
   let path = q ? `search/${type}` : `${type}/popular`;
+  const collection = String(req.query.collection || 'popular');
+  if (mode === 'search' && !q) {
+    if (collection === 'rated') path = type + '/top_rated';
+    else if (collection === 'new' || collection === 'genre') path = 'discover/' + type;
+    else if (collection !== 'popular') return res.status(400).json({error:'Unknown collection.'});
+  }
   if (mode === 'seasons') path = `tv/${id}`;
   if (mode === 'episodes') path = `tv/${id}/season/${season}`;
   const u = new URL('https://api.themoviedb.org/3/' + path);
   if (mode === 'search' && q) {
     u.searchParams.set('query',q);
     u.searchParams.set('include_adult','false');
+  }
+  if (mode === 'search') {
+    const page = Number(req.query.page || 1);
+    if (!Number.isInteger(page) || page < 1 || page > 500) return res.status(400).json({error:'Invalid page.'});
+    u.searchParams.set('page', page);
+    u.searchParams.set('include_adult', 'false');
+    if (!q && collection === 'genre') {
+      const genre = String(req.query.genre || '');
+      if (!/^\d{1,5}$/.test(genre)) return res.status(400).json({error:'Choose a genre.'});
+      u.searchParams.set('with_genres', genre);
+    }
+    if (!q && collection === 'new') {
+      const date = type === 'movie' ? 'primary_release_date' : 'first_air_date';
+      const today = new Date();
+      u.searchParams.set(date + '.lte', today.toISOString().slice(0,10));
+      today.setUTCDate(today.getUTCDate() - 90);
+      u.searchParams.set(date + '.gte', today.toISOString().slice(0,10));
+      u.searchParams.set('sort_by', 'popularity.desc');
+    }
   }
   const headers = {accept:'application/json'};
   if (key.startsWith('eyJ')) headers.Authorization = `Bearer ${key}`; else u.searchParams.set('api_key',key);
@@ -56,6 +81,6 @@ module.exports = async (req, res) => {
       const episodes = (data.episodes || []).map(e => ({number:e.episode_number, name:e.name}));
       return res.status(200).json({episodes});
     }
-    return res.status(200).json({results:(data.results||[]).slice(0,20).map(m=>({id:m.id,title:m.title || m.name,overview:m.overview,date:m.release_date || m.first_air_date,poster:m.poster_path,rating:m.vote_average}))});
+    return res.status(200).json({pages:Math.min(data.total_pages || 1, 500),results:(data.results||[]).slice(0,20).map(m=>({id:m.id,title:m.title || m.name,overview:m.overview,date:m.release_date || m.first_air_date,poster:m.poster_path,rating:m.vote_average}))});
   } catch {return res.status(502).json({error:'Could not reach TMDB.'});}
 };

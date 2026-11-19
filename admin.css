@@ -27,3 +27,7 @@
 #passwordSettings summary { cursor:pointer; padding:8px 0; }
 #passwordForm { margin-top:16px; }
 #passwordHelp { margin:0 0 8px; }
+.comment-editor { padding:18px 0; border-top:1px solid #ffc2ef38; }
+.comment-editor label { display:block; color:var(--muted); }
+.comment-editor textarea { display:block; margin:8px 0; }
+.comment-editor button + button { margin-left:8px; }

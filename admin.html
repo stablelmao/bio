@@ -7,8 +7,8 @@
 <meta name="theme-color" content="#21071e">
 <title>admin • aidan.im</title>
 <link rel="stylesheet" href="/style.css?v=picks-1">
-<link rel="stylesheet" href="/admin.css?v=password-2">
-<script src="/mu-admin.js?v=ryver-1" defer></script>
+<link rel="stylesheet" href="/admin.css?v=wall-1">
+<script src="/mu-admin.js?v=wall-1" defer></script>
 </head>
 <body class="media-page admin-page">
 <main class="admin-shell">
@@ -16,8 +16,8 @@
   <div class="brand">admin, a branch of <a href="/">aidan.im</a></div>
   <div class="admin-links"><a class="media-link" href="/mu">[ music ]</a><a class="media-link" href="/st">[ streaming ]</a></div>
 </header>
-<div class="media-heading"><h1>your <em>picks.</em></h1></div>
-<p class="admin-intro">a little space for your favorites.</p>
+<div class="media-heading"><h1>site <em>admin.</em></h1></div>
+
 <div class="account-tabs" role="group" aria-label="Admin account">
   <button type="button" data-account="music" aria-pressed="true">Aidan</button>
   <button type="button" data-account="jaiden" aria-pressed="false">Jaiden</button>
@@ -35,12 +35,23 @@
 </section>
 <section class="media-panel" id="editor" hidden aria-labelledby="editorTitle">
 <div class="row-title"><h2 id="editorTitle">Aidan's picks</h2><button id="logout" type="button">[ sign out ]</button></div>
+<div id="ownerTools" class="account-tabs" role="group" aria-label="Manage" hidden>
+<button id="editPicks" type="button" aria-pressed="true">Music picks</button>
+<button id="editWall" type="button" aria-pressed="false">Comment wall</button>
+</div>
+<div id="picksPane">
 <form id="find" class="search"><input id="query" placeholder="Search for a song" required maxlength="100" aria-label="Search for a song"><button type="submit">Search</button></form>
 <p class="hint" id="status" role="status">Search and add songs, then publish your picks.</p>
 <div id="results" class="admin-results" aria-label="Search results"></div>
 <h2 class="selection-title">your selection.</h2>
 <div id="selected" class="admin-selection"></div>
 <button id="publish" type="button">[ publish picks ]</button>
+</div>
+<section id="wallPane" hidden aria-label="Moderate comment wall">
+<div class="row-title"><h3>Comments</h3><button id="refreshWall" type="button">Refresh</button></div>
+<p id="moderationStatus" class="hint" role="status"></p><div id="moderationList"></div>
+<button id="moreComments" type="button" hidden>Older comments</button>
+</section>
 <details id="passwordSettings" hidden>
 <summary>Change password</summary>
 <form id="passwordForm" class="admin-form">

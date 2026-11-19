@@ -47,3 +47,24 @@ test('TV search, seasons and episodes retain TMDB names and numbering', async t 
   assert.deepEqual((await call({mode:'episodes', id:'1', season:'3'})).body.episodes, [{number:9, name:'Finale'}]);
   assert.deepEqual(paths, ['/3/search/tv', '/3/tv/1', '/3/tv/1/season/3']);
 });
+
+test('genre and release filters use the correct movie and TV dates and catalog pages', async t => {
+  const key = process.env.TMDB_API_KEY;
+  process.env.TMDB_API_KEY = 'test';
+  t.after(() => { if (key === undefined) delete process.env.TMDB_API_KEY; else process.env.TMDB_API_KEY = key; });
+  let request;
+  t.mock.method(globalThis, 'fetch', async url => { request = url; return Response.json({total_pages:3, results:[{id:1,title:'Example',vote_average:8.5}]}); });
+  const page = await call({collection:'genre',genre:18,page:2});
+  assert.equal(request.pathname,'/3/discover/movie');
+  assert.equal(request.searchParams.get('with_genres'),'18');
+  assert.equal(request.searchParams.get('page'),'2');
+  assert.equal(page.body.results[0].rating,8.5);
+  assert.equal(page.body.pages,3);
+  for (const [type,date] of [['tv','first_air_date'],['movie','primary_release_date']]) {
+    await call({type,collection:'new'});
+    assert.ok(request.searchParams.get(date+'.gte') < request.searchParams.get(date+'.lte'));
+    await call({type,collection:'rated'});
+    assert.equal(request.pathname,'/3/'+type+'/top_rated');
+  }
+  assert.equal((await call({collection:'genre',genre:'invalid'})).code,400);
+});

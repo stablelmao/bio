@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id);
 const accounts = {
-  music:{endpoint:'/api/mu-admin', field:'tracks', login:'Aidan sign in', title:"Aidan's picks", help:"Manage the developer's picks on mu(sic).", noun:'song'},
+  music:{endpoint:'/api/mu-admin', field:'tracks', login:'Aidan sign in', title:"Aidan's picks", help:"Manage music picks and the comment wall.", noun:'song'},
   jaiden:{endpoint:'/api/st-admin', field:'picks', login:'Jaiden sign in', title:"Jaiden's picks", help:'Choose movies and tell everyone why you like them.', noun:'movie'},
   ryver:{endpoint:'/api/tv-admin', field:'picks', login:'Ryver sign in', title:"Ryver's picks", help:'Choose TV shows and tell everyone why you like them.', noun:'TV show'}
 };
@@ -60,12 +60,14 @@ async function showEditor(currentVersion) {
   if (currentVersion !== version) return;
   selection = data[settings.field]; render();
   $('login').hidden = true; $('editor').hidden = false;
+  $('ownerTools').hidden = account !== 'music';
   $('passwordSettings').hidden = account === 'music';
   $('status').textContent = 'Search and add ' + settings.noun + 's, then publish your picks.';
 }
 async function chooseAccount(next) {
   activeSearch?.abort(); account = next; const currentVersion = ++version;
   const settings = accounts[account]; selection = [];
+  selectPane(false); $('ownerTools').hidden = true;
   $('login').hidden = false; $('editor').hidden = true; $('password').value = '';
   $('passwordSettings').hidden = true; $('passwordSettings').open = false;
   $('passwordForm').reset(); $('passwordStatus').textContent = '';
@@ -147,5 +149,70 @@ $('passwordForm').onsubmit = async event => {
     if (version === currentVersion) $('passwordStatus').textContent = error.message;
   } finally { $('changePassword').disabled = false; }
 };
+let wallVersion = 0;
+let wallCursor = null;
+
+function selectPane(wall) {
+  wallVersion++;
+  $('picksPane').hidden = wall;
+  $('wallPane').hidden = !wall;
+  $('editPicks').setAttribute('aria-pressed', String(!wall));
+  $('editWall').setAttribute('aria-pressed', String(wall));
+  $('editorTitle').textContent = wall ? 'Comment wall' : accounts[account].title;
+  if (wall) loadComments();
+}
+function commentEditor(comment) {
+  const form = document.createElement('form');
+  form.className = 'comment-editor';
+  const label = document.createElement('label');
+  label.textContent = comment.name + ' · ' + new Date(comment.createdAt).toLocaleString();
+  const input = document.createElement('textarea');
+  input.maxLength = 1000;
+  input.required = true;
+  input.value = comment.message;
+  label.append(input);
+  const save = document.createElement('button');
+  save.textContent = 'Save edit';
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.textContent = 'Delete';
+  async function mutate(action) {
+    if (action === 'delete' && !confirm('Delete this comment by ' + comment.name + '?')) return;
+    const generation = wallVersion;
+    save.disabled = remove.disabled = input.disabled = true;
+    try {
+      const data = await api('/api/comments', { action, id:comment.id, createdAt:comment.createdAt, original:comment.message, message:input.value });
+      if (generation !== wallVersion) return;
+      if (action === 'delete') form.remove();
+      else { comment = data.comment; input.value = comment.message; }
+      $('moderationStatus').textContent = action === 'delete' ? 'Comment deleted.' : 'Edit saved.';
+    } catch (error) { if (generation === wallVersion) $('moderationStatus').textContent = error.message; }
+    finally { save.disabled = remove.disabled = input.disabled = false; }
+  }
+  form.onsubmit = event => { event.preventDefault(); mutate('edit'); };
+  remove.onclick = () => mutate('delete');
+  form.append(label, save, remove);
+  return form;
+}
+async function loadComments(older = false) {
+  const generation = ++wallVersion;
+  if (!older) { wallCursor = null; $('moderationList').replaceChildren(); }
+  $('moreComments').hidden = true;
+  $('moderationStatus').textContent = 'Loading comments…';
+  try {
+    const data = await api('/api/comments' + (older && wallCursor ? '?cursor=' + encodeURIComponent(wallCursor) : ''));
+    if (generation !== wallVersion) return;
+    $('moderationList').append(...data.comments.map(commentEditor));
+    wallCursor = data.cursor;
+    $('moderationStatus').textContent = $('moderationList').childElementCount ? '' : 'No comments yet.';
+    $('moreComments').hidden = !data.hasMore || !wallCursor;
+  } catch (error) {
+    if (generation === wallVersion) { $('moderationStatus').textContent = error.message; $('moreComments').hidden = !wallCursor; }
+  }
+}
+$('editWall').onclick = () => selectPane(true);
+$('editPicks').onclick = () => selectPane(false);
+$('refreshWall').onclick = () => loadComments();
+$('moreComments').onclick = () => loadComments(true);
 const requestedAccount = new URLSearchParams(location.search).get('account');
 chooseAccount(Object.hasOwn(accounts, requestedAccount) ? requestedAccount : 'music');

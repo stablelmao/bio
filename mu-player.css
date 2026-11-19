@@ -54,3 +54,7 @@
 .browse { order:0; } .warmup { order:1; } .player-card { order:2; } .picks { order:3; } .library { order:4; }
 .media-panel { margin-bottom:16px; } .track-head { gap:12px; } .cover { width:72px; height:72px; } .track-meta h2 { font-size:18px; }
 }
+.music-page main.shell { width:min(100%,1420px); margin-inline:auto; padding-inline:clamp(18px,4vw,52px); }
+#discover { order:3; }
+#discover h2 { font-size:23px; }
+@media(max-width:760px) { .music-page .picks { order:4; } .music-page .library { order:5; } }
