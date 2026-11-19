@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>mu(sic) • aidan.im</title>
 <link rel="stylesheet" href="/style.css?v=picks-1">
-<link rel="stylesheet" href="/mu-player.css?v=browse-2">
+<link rel="stylesheet" href="/mu-player.css?v=browse-3">
 <link rel="stylesheet" href="/media-menu.css?v=1">
 <script src="/media-menu.js?v=1" defer></script>
 </head>
@@ -152,26 +152,27 @@
 </div>
 </div></div>
 <section id="musicBrowser" hidden>
-<div class="browser-toolbar"><button type="button" id="browseBack">← Back</button><a href="#search" id="browseSearch">Search music</a></div>
+<div class="browser-toolbar"><button type="button" id="browseBack">← Back</button><a href="#search" id="browseSearch" class="media-link">Search music</a></div>
 <section id="searchPage" hidden>
 <h1>search<span>.</span></h1>
 <form id="search" class="search" role="search"><input id="query" type="search" maxlength="100" placeholder="Songs or artists" aria-label="Search songs or artists" autocomplete="off"><button type="submit">Search</button></form>
 <div id="resultFilters" role="group" aria-label="Filter search results"><button data-filter="all" aria-pressed="true">All</button><button data-filter="songs" aria-pressed="false">Songs</button><button data-filter="artists" aria-pressed="false">Artists</button></div>
 <div id="recents"></div>
-<section id="searchArtists" hidden><h2>Artists</h2><p role="status" id="artistsStatus"></p><div id="artistResults" class="artist-grid"></div></section>
-<section id="searchSongs" hidden><h2>Songs</h2><p role="status" id="songsStatus"></p><div id="songResults"></div></section>
+<section id="searchSongs" hidden><div class="result-heading"><h2>Songs</h2><button type="button" id="allSongs" hidden>All songs</button></div><p role="status" id="songsStatus"></p><div id="songResults"></div></section>
+<section id="searchArtists" hidden><div class="result-heading"><h2>Artists</h2><button type="button" id="allArtists" hidden>All artists</button></div><p role="status" id="artistsStatus"></p><div id="artistResults" class="artist-grid"></div></section>
 </section>
-<section id="detailPage" hidden><h1 id="detailHeading" tabindex="-1"></h1><p id="detailStatus" role="status"></p><div id="detailBody"></div></section>
+<section id="detailPage" hidden><header class="detail-header"><div id="artistPhoto"></div><h1 id="detailHeading" tabindex="-1"></h1></header><p id="detailStatus" role="status"></p><div id="detailBody"></div></section>
 <div id="browsePlaying" hidden><a href="#now" id="browseTrack"></a><button id="browseToggle" type="button">Play</button></div>
 </section>
 <dialog id="playlistDialog" aria-labelledby="playlistHeading"><div class="dialog-heading"><h2 id="playlistHeading"></h2><button type="button" id="closePlaylist" aria-label="Close playlist dialog">×</button></div><p id="playlistContext"></p><div id="playlistChoices"></div><form id="playlistForm"><label for="playlistName">Playlist name</label><input id="playlistName" maxlength="60" autocomplete="off" required><button type="submit" id="playlistSubmit">Create playlist</button></form><p role="status" id="playlistFeedback"></p></dialog>
 <p id="musicNotice" role="status"></p>
 </main>
-<script src="/mu-player.js?v=browse-2" defer>
+<script src="/mu-player.js?v=browse-3" defer>
 </script>
 
-<script src="/mu-library.js?v=browse-2" defer></script>
-<script src="/mu-browse.js?v=browse-2" defer></script>
+<script src="/mu-library.js?v=browse-3" defer></script>
+<script src="/mu-ranking.js?v=1" defer></script>
+<script src="/mu-browse.js?v=browse-3" defer></script>
 </body>
 </html>
 

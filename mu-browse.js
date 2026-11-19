@@ -30,14 +30,27 @@ function routeLink(label,hash,cls) {
   link.href = hash;
   return link;
 }
+function artistPortrait(item) {
+  const portrait = element('span',item.name.trim().split(/\s+/).slice(0,2).map(word => word[0]).join(''), 'artist-monogram');
+  portrait.setAttribute('aria-hidden','true');
+  if (item.picture || item.id) {
+    const img = new Image();
+    img.alt = '';
+    img.loading = 'lazy';
+    img.onerror = () => img.remove();
+    img.src = item.picture || '/api/mu?mode=portrait&id=' + encodeURIComponent(item.id);
+    portrait.append(img);
+  }
+  return portrait;
+}
 function cardGridArtist(item) {
   const params = new URLSearchParams({name:item.name});
   if (item.id) params.set('id',item.id);
   const link = routeLink('', '#artist?' + params, 'artist-card');
-  const initial = element('span',item.name.trim().split(/\s+/).slice(0,2).map(word => word[0]).join(''), 'artist-monogram');
-  initial.setAttribute('aria-hidden','true');
-  link.append(initial,element('strong',item.name));
-  if (item.genre) link.append(element('small',item.genre));
+  const label = element('span',null,'artist-label');
+  label.append(element('strong',item.name));
+  if (item.genre) label.append(element('small',item.genre));
+  link.append(artistPortrait(item),label);
   return link;
 }
 function titleRows(box,tracks) {
@@ -71,7 +84,10 @@ function showRecent() {
   for (const term of recent) items.append(routeLink(term,searchHash(term,'all')));
   box.append(items);
 }
+let redrawSearch;
 function search(term, immediate) {
+  redrawSearch = null;
+  $('allArtists').hidden = $('allSongs').hidden = true;
   const signal = beginRequest();
   $('artistResults').replaceChildren();
   $('songResults').replaceChildren();
@@ -79,30 +95,41 @@ function search(term, immediate) {
   updateFilters(term);
   if (!term) { showRecent(); return; }
   $('artistsStatus').textContent = $('songsStatus').textContent = 'Searching…';
-  const render = async () => {
-    let artists = [], tracks = [], directoryDone = false;
-    const populateArtists = () => {
+  const render = () => {
+    let artists = [], catalog = [], suggested = [], pendingSongs = 2, songSources = 0;
+    let artistsDone = false, artistError = false;
+    const draw = () => {
       if (signal.aborted) return;
-      const list = new Map(artists.map(item => [item.name.toLowerCase(),item]));
-      for (const track of tracks) {
-        if (track.channel?.toLowerCase().includes(term.toLowerCase()) && !list.has(track.channel.toLowerCase()))
-          list.set(track.channel.toLowerCase(),{name:track.channel});
+      const byName = new Set(artists.map(item => normalizeName(item.name)));
+      const candidates = [...artists];
+      for (const track of catalog) {
+        const key = normalizeName(track.channel || '');
+        if (key && !byName.has(key)) {
+          candidates.push({name:track.channel});
+          byName.add(key);
+        }
       }
-      $('artistResults').replaceChildren(...[...list.values()].slice(0,12).map(cardGridArtist));
-      if (list.size) $('artistsStatus').textContent = '';
-      else if (directoryDone) $('artistsStatus').textContent = 'No matching artists.';
+      const people = musicRanking.rankArtists(term,candidates);
+      const songs = musicRanking.rankSongs(term,catalog,suggested,artists);
+      $('artistResults').replaceChildren(...people.slice(0,searchFilter === 'all' ? 3 : 16).map(cardGridArtist));
+      $('artistsStatus').textContent = people.length ? '' : !artistsDone ? 'Searching…' : artistError ? 'Artist search is unavailable.' : 'No matching artists.';
+      $('songResults').replaceChildren();
+      const visible = searchFilter === 'all' ? songs.slice(0,6) : songs;
+      titleRows($('songResults'),visible);
+      $('songsStatus').textContent = songs.length ? '' : pendingSongs ? 'Searching…' : songSources ? 'No matching songs.' : 'Song search is unavailable. Try again.';
+      $('allSongs').hidden = searchFilter !== 'all' || songs.length <= visible.length;
+      $('allArtists').hidden = searchFilter !== 'all' || people.length <= 3;
     };
-    directory('artists',{q:term},signal).then(data => {
-      artists = data.artists; directoryDone = true;
-      populateArtists();
-    }).catch(() => { if (!signal.aborted && !$('artistResults').childElementCount) $('artistsStatus').textContent = 'Artist search is unavailable. Try again.'; });
-    try {
-      tracks = await catalogSearch(term,signal);
-      if (signal.aborted) return;
-      $('songsStatus').textContent = tracks.length ? '' : 'No matching songs.';
-      titleRows($('songResults'),tracks);
-      populateArtists();
-    } catch { if (!signal.aborted) $('songsStatus').textContent = 'Song search is unavailable. Try again.'; }
+    redrawSearch = draw;
+    directory('artists',{q:term},signal).then(data => { artists = data.artists; })
+      .catch(() => { artistError = true; }).finally(() => { artistsDone = true; draw(); });
+    const loadSongs = async (request,setRows) => {
+      try { setRows(await request); songSources++; }
+      catch { /* The other catalog can still supply results. */ }
+      finally { pendingSongs--; draw(); }
+    };
+    loadSongs(catalogSearch(term,signal),rows => { catalog = rows; });
+    loadSongs(directory('matches',{q:term},signal),data => { suggested = data.tracks; });
   };
   if (immediate) render(); else searchDelay = setTimeout(render,300);
 }
@@ -119,7 +146,10 @@ for (const button of $('resultFilters').querySelectorAll('button')) button.oncli
   const term = queryBox.value.trim();
   history.replaceState(history.state,'',searchHash(term,searchFilter));
   updateFilters(term);
+  redrawSearch?.();
 };
+$('allSongs').onclick = () => document.querySelector('[data-filter="songs"]').click();
+$('allArtists').onclick = () => document.querySelector('[data-filter="artists"]').click();
 function albumsGrid(albums) {
   const grid = element('div',null,'release-grid');
   for (const release of albums) {
@@ -145,6 +175,7 @@ async function renderDetail(type,params,signal) {
   let id = params.get('id');
   const body = $('detailBody');
   body.replaceChildren();
+  $('artistPhoto').replaceChildren();
   $('detailHeading').textContent = name || (type === 'album' ? 'Album' : 'Artist');
   $('detailStatus').textContent = 'Loading…';
   try {
@@ -165,13 +196,15 @@ async function renderDetail(type,params,signal) {
       id = artists.find(a => normalizeName(a.name) === normalizeName(name))?.id;
     }
     if (id) {
-      const {artist,tracks,albums} = await directory('artist',{id},signal);
+      const {artist,tracks,albums,singles = []} = await directory('artist',{id},signal);
       if (signal.aborted) return;
       $('detailHeading').textContent = artist.name;
+      $('artistPhoto').append(artistPortrait(artist));
       if (artist.genre) body.append(element('p',artist.genre,'detail-meta'));
-      listTracks(body,tracks,'Popular songs');
-      if (albums.length) body.append(element('h2','Discography'),albumsGrid(albums));
-      $('detailStatus').textContent = albums.length || tracks.length ? '' : 'No releases available.';
+      listTracks(body,tracks.slice(0,5),'Top 5 songs');
+      if (albums.length) body.append(element('h2','Albums'),albumsGrid(albums));
+      if (singles.length) body.append(element('h2','Singles & EPs'),albumsGrid(singles));
+      $('detailStatus').textContent = albums.length || singles.length || tracks.length ? '' : 'No releases available.';
       return;
     }
     throw Error('Artist unavailable.');
@@ -182,7 +215,7 @@ async function renderDetail(type,params,signal) {
         const tracks = (await catalogSearch(name,signal)).filter(track => artistNames(track.channel).includes(normalizeName(name)));
         if (signal.aborted) return;
         if (tracks.length) {
-          listTracks(body,tracks,'Songs');
+          listTracks(body,tracks.slice(0,5),'Top songs');
           $('detailStatus').textContent = 'The full discography is unavailable.';
           return;
         }
