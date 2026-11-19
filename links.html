@@ -16,7 +16,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://aidan.im/preview.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="stylesheet" href="/style.css?v=pages-4" />
+    <link rel="stylesheet" href="/style.css?v=pages-5" />
     <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
   </head>
   <body data-page="links">
@@ -25,6 +25,7 @@
     </audio>
 
     <nav class="floating-nav" id="site-nav" aria-label="Main navigation">
+      <a class="nav-music" href="/mu">music player</a>
       <button
         class="nav-toggle"
         type="button"
@@ -40,6 +41,17 @@
         <a href="/about">more about me</a>
         <a href="/links" aria-current="page">links</a>
         <a href="/wall">comments wall</a>
+        <a href="/st">movies &amp; TV</a>
+        <button
+          class="audio-toggle"
+          id="audio-toggle"
+          type="button"
+          aria-label="Play music"
+          aria-pressed="false"
+          hidden
+        >
+          [ music: off ]
+        </button>
       </div>
     </nav>
     <main id="bio">
@@ -49,7 +61,6 @@
         aria-labelledby="links-title"
       >
         <h1 id="links-title" tabindex="-1">links.</h1>
-        <p class="view-lead">find me and the stuff i'm working on.</p>
         <a
           class="project-link"
           href="https://github.com/stablelmao"
@@ -69,18 +80,8 @@
           rel="noopener noreferrer"
           >[ source code ]</a
         >
-        <button
-          class="audio-toggle"
-          id="audio-toggle"
-          type="button"
-          aria-label="Play music"
-          aria-pressed="false"
-          hidden
-        >
-          [ music: off ]
-        </button>
       </footer>
     </main>
-    <script src="/main.js?v=pages-4"></script>
+    <script src="/main.js?v=pages-5"></script>
   </body>
 </html>

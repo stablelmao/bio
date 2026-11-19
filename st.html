@@ -1,1 +1,40 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#21071e"><title>movies · aidan</title><link rel="stylesheet" href="/st.css"></head><body><div class="shell"><header><a class="brand" href="/">stable<span>!</span></a><a class="back" href="/">← back home</a></header><main><p class="eyebrow">YOUR LITTLE MOVIE CORNER</p><h1>find your next <em>watch.</em></h1><p class="intro">Search for a movie, settle in, and press play.</p><form id="search" class="search"><label class="sr" for="query">Search movies</label><input id="query" placeholder="Search for a movie…" autocomplete="off"><button>Search</button></form><section id="watch" hidden><div class="row"><div><p class="eyebrow">NOW PLAYING</p><h2 id="watch-title"></h2></div><button class="close" id="close" type="button">Close ×</button></div><div class="player"><iframe id="frame" title="Movie player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="hint">Player provided by VidSrc. Playback depends on your network and the available sources.</p></section><section><div class="row"><div><p class="eyebrow">EXPLORE</p><h2 id="heading">Popular movies</h2></div></div><p id="status" class="hint" role="status">Finding movies…</p><div id="results" class="grid"></div></section></main><footer>Movie information and images from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</footer></div><script src="/st.js" defer></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#21071e">
+  <title>movies &amp; TV · aidan</title>
+  <link rel="stylesheet" href="/st.css?v=2">
+  <script src="/st.js?v=2" defer></script>
+</head>
+<body><div class="shell">
+  <header><a class="brand" href="/">stable<span>!</span></a><a class="back" href="/">back home</a></header>
+  <main>
+    <h1>movies <em>&amp; TV.</em></h1>
+    <div class="media-types" role="group" aria-label="Browse by type">
+      <button type="button" data-type="movie" aria-pressed="true">Movies</button>
+      <button type="button" data-type="tv" aria-pressed="false">TV shows</button>
+    </div>
+    <form id="search" class="search">
+      <label class="sr" for="query" id="query-label">Search movies</label>
+      <input id="query" placeholder="Search movies…" autocomplete="off" maxlength="100">
+      <button>Search</button>
+    </form>
+    <section id="watch" aria-labelledby="watch-title" hidden>
+      <div class="row"><h2 id="watch-title"></h2><button class="close" id="close" type="button">Close ×</button></div>
+      <div id="series" hidden>
+        <label>Season <select id="season"></select></label>
+        <label>Episode <select id="episode"></select></label>
+      </div>
+      <p id="watch-status" class="hint" role="status"></p>
+      <div class="player" id="player" hidden><iframe id="frame" title="Video player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+    </section>
+    <section aria-labelledby="heading">
+      <h2 id="heading">Popular movies</h2><p id="status" class="hint" role="status"></p>
+      <div id="results" class="grid"></div>
+    </section>
+  </main>
+  <footer>Player by VidSrc. This product uses the TMDB API but is not endorsed or certified by TMDB.</footer>
+</div></body>
+</html>

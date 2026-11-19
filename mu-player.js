@@ -13,7 +13,88 @@ function playTracks(tracks,index=0){if(!tracks.length)return;queue=tracks.slice(
 function move(delta){if(!queue.length)return;current=shuffle&&queue.length>1?Math.floor(Math.random()*queue.length):(current+delta+queue.length)%queue.length;startTrack(queue[current])}
 audio.addEventListener('playing',()=>{$('toggleIcon').setAttribute('href','#pause-icon');$('playerStatus').textContent='playing now.'});audio.addEventListener('pause',()=>{$('toggleIcon').setAttribute('href','#play-icon')});audio.addEventListener('error',()=>{$('playerStatus').textContent='This track could not play. The music service may be unavailable.'});audio.addEventListener('ended',()=>{if(repeat){audio.currentTime=0;audio.play().catch(()=>{})}else if(queue.length>1)move(1)});audio.addEventListener('timeupdate',()=>{$('elapsed').textContent=time(audio.currentTime);$('duration').textContent=time(audio.duration);if(document.activeElement!==$('seek'))$('seek').value=audio.duration?Math.floor(audio.currentTime/audio.duration*1000):0});$('seek').oninput=e=>{if(audio.duration)audio.currentTime=Number(e.target.value)/1000*audio.duration};
 $('toggle').onclick=()=>{if(!queue.length){$('playerStatus').textContent='Choose a song first.';return}if(!audio.paused)audio.pause();else audio.play().catch(()=>{$('playerStatus').textContent='Could not play this track.'})};$('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('shuffle').onclick=()=>{shuffle=!shuffle;$('shuffle').classList.toggle('active',shuffle);$('shuffle').setAttribute('aria-pressed',shuffle)};$('repeat').onclick=()=>{repeat=!repeat;$('repeat').classList.toggle('active',repeat);$('repeat').setAttribute('aria-pressed',repeat)};
-$('search').onsubmit=async e=>{e.preventDefault();$('results').replaceChildren();$('searchStatus').textContent='Searching…';try{let r;try{r=await fetch(`${MDATA}?mode=search&q=${encodeURIComponent($('query').value)}`,{signal:AbortSignal.timeout(8000)})}catch{r=await fetch(`${API}?mode=search&q=${encodeURIComponent($('query').value)}`)}let data=await r.json();if(!r.ok)throw Error(data.error||'Search failed');$('searchStatus').textContent=data.results.length?'Select a song to play. + saves it to a playlist.':'No results found. Try another search.';data.results.forEach(t=>$('results').append(row(t,{label:'+',aria:'Add to playlist',action:()=>addToPlaylist(t)})))}catch(err){$('searchStatus').textContent=err.message}};
+const songSearch = $('songSearch');
+const songQuery = $('query');
+const suggestions = $('suggestions');
+let searchTimer;
+let activeSearch;
+
+function dismissSuggestions() {
+  clearTimeout(searchTimer);
+  activeSearch?.abort();
+  suggestions.hidden = true;
+}
+
+async function findSongs(term) {
+  const controller = new AbortController();
+  activeSearch = controller;
+  const params = '?mode=search&q=' + encodeURIComponent(term);
+  try {
+    let response;
+    try {
+      response = await fetch(MDATA + params, {
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(8000)])
+      });
+      if (!response.ok) throw Error('Metadata search unavailable.');
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      response = await fetch(API + params, { signal: controller.signal });
+    }
+    const data = await response.json();
+    if (controller.signal.aborted) return;
+    if (!response.ok) throw Error(data.error || 'Search unavailable.');
+    $('searchStatus').textContent = data.results.length ? '' : 'No songs found.';
+    for (const track of data.results) {
+      const result = row(track, {
+        label: '+', aria: 'Add ' + track.title + ' to a playlist',
+        action: () => addToPlaylist(track)
+      });
+      result.querySelector('.track-main').onclick = () => {
+        dismissSuggestions();
+        songQuery.focus();
+        playTracks([track]);
+      };
+      $('results').append(result);
+    }
+  } catch (error) {
+    if (!controller.signal.aborted) $('searchStatus').textContent = error.message || 'Search unavailable.';
+  }
+}
+
+function scheduleSearch(immediate) {
+  dismissSuggestions();
+  $('results').replaceChildren();
+  const term = songQuery.value.trim();
+  if (!term || (!immediate && term.length < 2)) return;
+  suggestions.hidden = false;
+  $('searchStatus').textContent = 'Searching…';
+  if (immediate) findSongs(term);
+  else searchTimer = setTimeout(() => findSongs(term), 400);
+}
+songQuery.addEventListener('input', () => scheduleSearch(false));
+$('search').onsubmit = event => {
+  event.preventDefault();
+  scheduleSearch(true);
+};
+songSearch.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    dismissSuggestions();
+    songQuery.focus();
+  } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    const rows = [...$('results').querySelectorAll('.track-main')];
+    if (suggestions.hidden || !rows.length) return;
+    event.preventDefault();
+    const index = rows.indexOf(document.activeElement);
+    const next = event.key === 'ArrowDown' ? index + 1 : Math.max(0, index - 1);
+    rows[Math.min(next, rows.length - 1)].focus();
+  }
+});
+document.addEventListener('pointerdown', event => {
+  if (!songSearch.contains(event.target)) dismissSuggestions();
+});
+songSearch.addEventListener('focusout', event => {
+  if (event.relatedTarget && !songSearch.contains(event.relatedTarget)) dismissSuggestions();
+});
 function addToPlaylist(track){if(!playlists.length){let name=prompt('Name your new playlist:');if(!name?.trim())return;playlists.push({name:name.trim().slice(0,60),tracks:[]})}let n=prompt('Add to which playlist?\n'+playlists.map((p,i)=>`${i+1}. ${p.name}`).join('\n'),'1');let index=Number(n)-1;if(!Number.isInteger(index)||!playlists[index])return;if(!playlists[index].tracks.some(t=>t.id===track.id))playlists[index].tracks.push(track);save();$('searchStatus').textContent=`Added to ${playlists[index].name}.`}
 function renderPlaylists(){let box=$('playlists');box.replaceChildren();if(!playlists.length){let p=document.createElement('p');p.className='empty';p.textContent='No playlists yet. Make one and save your favorites.';box.append(p);return}playlists.forEach((p,i)=>{let div=document.createElement('div');div.className='playlist';let h=document.createElement('h3');h.textContent=`${p.name} · ${p.tracks.length} songs`;div.append(h);let buttons=document.createElement('div');buttons.className='list-buttons';for(let [label,fn] of [['play',()=>playTracks(p.tracks)],['view',()=>{let area=div.querySelector('.track-list');area.hidden=!area.hidden}],['delete',()=>{if(confirm(`Delete ${p.name}?`)){playlists.splice(i,1);save()}}]]){let b=document.createElement('button');b.textContent=label;b.onclick=fn;buttons.append(b)}div.append(buttons);let area=document.createElement('div');area.className='track-list';area.hidden=true;p.tracks.forEach((t,j)=>area.append(row(t,{label:'×',aria:'Remove from playlist',action:()=>{p.tracks.splice(j,1);save()}})));div.append(area);box.append(div)})}
 $('create').onclick=()=>{let name=prompt('Playlist name:');if(name?.trim()){playlists.push({name:name.trim().slice(0,60),tracks:[]});save()}};$('libraryTab').onclick=()=>$('library').scrollIntoView({behavior:'smooth'});$('playPicks').onclick=()=>playTracks(picks);

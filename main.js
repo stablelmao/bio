@@ -60,6 +60,9 @@ siteNav.addEventListener("keydown", (event) => {
 document.addEventListener("click", (event) => {
   if (!siteNav.contains(event.target)) closeMenu();
 });
+siteNav.addEventListener("focusout", (event) => {
+  if (!siteNav.contains(event.relatedTarget)) closeMenu();
+});
 siteNav
   .querySelectorAll("a")
   .forEach((link) => link.addEventListener("click", saveSession));

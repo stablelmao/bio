@@ -1,7 +1,155 @@
-const form=document.getElementById('search'),query=document.getElementById('query'),statusEl=document.getElementById('status'),results=document.getElementById('results'),heading=document.getElementById('heading'),watch=document.getElementById('watch'),frame=document.getElementById('frame');
-let seq=0;
-async function search(q=''){
- const current=++seq;statusEl.textContent='Finding movies…';results.replaceChildren();heading.textContent=q?'Search results':'Popular movies';
- try{const response=await fetch('/api/st?mode=search&q='+encodeURIComponent(q));const data=await response.json();if(!response.ok)throw Error(data.error||'Search failed.');if(current!==seq)return;statusEl.textContent=data.results.length?'':'No movies found. Try another search.';for(const movie of data.results){const button=document.createElement('button');button.className='movie';button.type='button';const img=document.createElement('img');img.className='poster';img.alt='';img.loading='lazy';if(movie.poster)img.src='/api/st?mode=image&path='+encodeURIComponent(movie.poster);const title=document.createElement('strong');title.textContent=movie.title||'Untitled';const info=document.createElement('small');info.textContent=(movie.date||'').slice(0,4)||'Movie';button.append(img,title,info);button.addEventListener('click',()=>play(movie));results.append(button)}}catch(e){if(current===seq)statusEl.textContent=e.message||'Search unavailable.'}}
-async function play(movie){watch.hidden=false;document.getElementById('watch-title').textContent=movie.title;frame.removeAttribute('src');watch.scrollIntoView({behavior:'smooth',block:'start'});try{const response=await fetch('/api/st?mode=player&id='+encodeURIComponent(movie.id));const data=await response.json();if(!response.ok)throw Error(data.error);frame.src=data.url}catch(e){alert(e.message||'Player unavailable.')}}
-form.addEventListener('submit',e=>{e.preventDefault();search(query.value.trim())});document.getElementById('close').addEventListener('click',()=>{frame.removeAttribute('src');watch.hidden=true});search();
+const byId = id => document.getElementById(id);
+const query = byId('query');
+const season = byId('season');
+const episode = byId('episode');
+const frame = byId('frame');
+let mediaType = 'movie';
+let searchRequest;
+let watchRequest;
+let selected;
+let selectedCard;
+
+async function request(params, signal) {
+  const response = await fetch('/api/st?' + new URLSearchParams(params), {signal});
+  const data = await response.json();
+  if (!response.ok) throw Error(data.error || 'Request failed. Try again.');
+  return data;
+}
+
+function card(item) {
+  const button = document.createElement('button');
+  button.className = 'movie';
+  button.type = 'button';
+  const poster = document.createElement(item.poster ? 'img' : 'span');
+  poster.className = 'poster';
+  if (item.poster) {
+    poster.alt = '';
+    poster.loading = 'lazy';
+    poster.src = '/api/st?' + new URLSearchParams({mode:'image', path:item.poster});
+  }
+  const title = document.createElement('strong');
+  title.textContent = item.title || 'Untitled';
+  button.append(poster, title);
+  if (item.date) {
+    const year = document.createElement('small');
+    year.textContent = item.date.slice(0, 4);
+    button.append(year);
+  }
+  button.addEventListener('click', () => openWatch(item, button));
+  return button;
+}
+
+async function search() {
+  searchRequest?.abort();
+  const controller = new AbortController();
+  searchRequest = controller;
+  const q = query.value.trim();
+  const label = mediaType === 'tv' ? 'TV shows' : 'movies';
+  byId('heading').textContent = q ? 'Search results' : 'Popular ' + label;
+  byId('status').textContent = 'Finding ' + label + '…';
+  byId('results').replaceChildren();
+  try {
+    const data = await request({mode:'search', type:mediaType, q}, controller.signal);
+    if (controller.signal.aborted) return;
+    byId('results').replaceChildren(...data.results.map(card));
+    byId('status').textContent = data.results.length ? '' : 'No ' + label + ' found.';
+  } catch (error) {
+    if (!controller.signal.aborted) byId('status').textContent = error.message;
+  }
+}
+
+function clearPlayer() {
+  byId('player').hidden = true;
+  frame.removeAttribute('src');
+}
+
+function closeWatch() {
+  watchRequest?.abort();
+  clearPlayer();
+  selected = null;
+  byId('watch').hidden = true;
+}
+
+function fillOptions(select, items, title) {
+  select.replaceChildren(...items.map(item => new Option(title(item), item.number)));
+  select.disabled = !items.length;
+}
+
+async function loadPlayer(signal) {
+  const params = {mode:'player', type:mediaType, id:selected.id};
+  if (mediaType === 'tv') Object.assign(params, {season:season.value, episode:episode.value});
+  const data = await request(params, signal);
+  if (signal.aborted) return;
+  frame.title = mediaType === 'movie' ? selected.title :
+    selected.title + ', season ' + season.value + ', episode ' + episode.value;
+  frame.src = data.url;
+  byId('player').hidden = false;
+  byId('watch-status').textContent = '';
+}
+
+async function updateWatch(stage) {
+  watchRequest?.abort();
+  const controller = new AbortController();
+  watchRequest = controller;
+  const signal = controller.signal;
+  clearPlayer();
+  byId('watch-status').textContent = 'Loading…';
+  try {
+    if (mediaType === 'tv' && stage === 'show') {
+      fillOptions(season, []);
+      fillOptions(episode, []);
+      const {seasons} = await request({mode:'seasons', id:selected.id}, signal);
+      if (signal.aborted) return;
+      fillOptions(season, seasons, s => s.name || 'Season ' + s.number);
+      if (!seasons.length) throw Error('No seasons available.');
+      season.value = (seasons.find(s => s.number > 0) || seasons[0]).number;
+    }
+    if (mediaType === 'tv' && stage !== 'episode') {
+      fillOptions(episode, []);
+      const {episodes} = await request({mode:'episodes', id:selected.id, season:season.value}, signal);
+      if (signal.aborted) return;
+      fillOptions(episode, episodes, e => e.name ? e.number + ' · ' + e.name : 'Episode ' + e.number);
+      if (!episodes.length) throw Error('No episodes available for this season.');
+    }
+    await loadPlayer(signal);
+  } catch (error) {
+    if (!signal.aborted) byId('watch-status').textContent = error.message;
+  }
+}
+
+function openWatch(item, button) {
+  selected = item;
+  selectedCard = button;
+  byId('watch-title').textContent = item.title;
+  byId('series').hidden = mediaType !== 'tv';
+  byId('watch').hidden = false;
+  byId('close').focus({preventScroll:true});
+  byId('watch').scrollIntoView({block:'start'});
+  updateWatch('show');
+}
+
+season.addEventListener('change', () => updateWatch('season'));
+episode.addEventListener('change', () => updateWatch('episode'));
+byId('close').addEventListener('click', () => {
+  closeWatch();
+  if (selectedCard?.isConnected) selectedCard.focus();
+  else query.focus();
+});
+byId('search').addEventListener('submit', event => {
+  event.preventDefault();
+  search();
+});
+const typeButtons = document.querySelectorAll('[data-type]');
+for (const button of typeButtons) {
+  button.addEventListener('click', () => {
+    if (button.dataset.type === mediaType) return;
+    closeWatch();
+    mediaType = button.dataset.type;
+    typeButtons.forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
+    const prompt = mediaType === 'tv' ? 'Search TV shows' : 'Search movies';
+    query.placeholder = prompt + '…';
+    byId('query-label').textContent = prompt;
+    search();
+  });
+}
+search();

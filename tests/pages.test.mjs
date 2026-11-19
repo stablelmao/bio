@@ -19,7 +19,7 @@ for (const [route, file] of Object.entries(pages)) {
     );
     const nav = html.match(/<nav[\s\S]*?<\/nav>/)[0];
     const targets = [...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
-    assert.deepEqual(new Set(targets), new Set(Object.keys(pages)));
+    assert.deepEqual(new Set(targets), new Set([...Object.keys(pages), "/mu", "/st"]));
     assert.match(nav, new RegExp(`href="${route}"[^>]*aria-current="page"`));
     assert.doesNotMatch(nav, /href="#/);
     assert.match(html, /src="\/main.js\?/);
