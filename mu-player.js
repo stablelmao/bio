@@ -47,7 +47,14 @@ function row(track, extra) {
 function showTrack(t){$('title').textContent=t.title;$('artist').textContent=t.channel;$('album').textContent=t.album||'';fillCover($('cover'),t);if('mediaSession' in navigator&&window.MediaMetadata){const metadata={title:t.title,artist:t.channel,album:t.album||''};if(t.cover)metadata.artwork=[{src:API+'?mode=cover&id='+encodeURIComponent(t.cover),sizes:'320x320',type:'image/jpeg'}];navigator.mediaSession.metadata=new MediaMetadata(metadata)}$('playerStatus').textContent='Loading track…'}
 let currentStream=null,objectUrl=null;
 function bufferChunk(buffer,data,signal){return new Promise((resolve,reject)=>{if(signal.aborted)return reject(Error('Cancelled'));const done=()=>{buffer.removeEventListener('error',fail);resolve()};const fail=()=>{buffer.removeEventListener('updateend',done);reject(Error('Audio buffer failed'))};buffer.addEventListener('updateend',done,{once:true});buffer.addEventListener('error',fail,{once:true});try{buffer.appendBuffer(data)}catch(e){buffer.removeEventListener('updateend',done);buffer.removeEventListener('error',fail);reject(e)}})}
-async function startTrack(t){showTrack(t);if(currentStream)currentStream.abort();const controller=new AbortController();currentStream=controller;audio.pause();audio.removeAttribute('src');audio.load();if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}try{const r=await fetch(`${API}?mode=manifest&id=${encodeURIComponent(t.id)}`,{signal:controller.signal});const data=await r.json();if(!r.ok)throw Error(data.error||'Unable to load track');if(controller.signal.aborted)return;if(data.type==='direct'){audio.src=`${API}?mode=audio&id=${encodeURIComponent(t.id)}`;audio.play().catch(()=>{$('playerStatus').textContent='Press play to start the song.'});return}const mime=`audio/mp4; codecs="${data.codecs}"`;if(!window.MediaSource||!MediaSource.isTypeSupported(mime)||new URLSearchParams(location.search).get('audio')==='compat'){if(!audio.canPlayType(mime))throw Error('Your browser or device cannot decode this audio format.');$('playerStatus').textContent='Preparing audio for your browser…';const parts=[];let size=0;for(const token of data.segments){const part=await fetch(`${API}?mode=segment&token=${encodeURIComponent(token)}`,{signal:controller.signal});if(!part.ok)throw Error('Audio segment could not load.');const bytes=await part.arrayBuffer();size+=bytes.byteLength;if(size>100*1024*1024)throw Error('This track is too large for compatibility playback.');parts.push(bytes)}if(controller.signal.aborted)return;objectUrl=URL.createObjectURL(new Blob(parts,{type:'audio/mp4'}));audio.src=objectUrl;await audio.play().catch(()=>{$('playerStatus').textContent='Press play to start the song.'});return}const source=new MediaSource();objectUrl=URL.createObjectURL(source);audio.src=objectUrl;audio.play().catch(()=>{if(!controller.signal.aborted)$('playerStatus').textContent='Press play to start the song.'});await new Promise((resolve,reject)=>{source.addEventListener('sourceopen',resolve,{once:true});controller.signal.addEventListener('abort',()=>reject(Error('Cancelled')),{once:true})});if(controller.signal.aborted)return;const buffer=source.addSourceBuffer(mime);for(const token of data.segments){if(controller.signal.aborted)return;const part=await fetch(`${API}?mode=segment&token=${encodeURIComponent(token)}`,{signal:controller.signal});if(!part.ok)throw Error('Audio segment could not load.');await bufferChunk(buffer,await part.arrayBuffer(),controller.signal)}if(!controller.signal.aborted&&source.readyState==='open')source.endOfStream()}catch(e){if(!controller.signal.aborted)$('playerStatus').textContent=e.message||'This track could not play.'}}
+async function startTrack(t){showTrack(t);if(currentStream)currentStream.abort();const controller=new AbortController();currentStream=controller;audio.pause();audio.removeAttribute('src');audio.load();if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}try{
+  if (t.chartEntry) {
+    const match = await resolveChartTrack(t, controller.signal);
+    if (controller.signal.aborted) return;
+    queue[current] = t = match;
+    showTrack(t);
+  }
+  const r=await fetch(`${API}?mode=manifest&id=${encodeURIComponent(t.id)}`,{signal:controller.signal});const data=await r.json();if(!r.ok)throw Error(data.error||'Unable to load track');if(controller.signal.aborted)return;if(data.type==='direct'){audio.src=`${API}?mode=audio&id=${encodeURIComponent(t.id)}`;audio.play().catch(()=>{$('playerStatus').textContent='Press play to start the song.'});return}const mime=`audio/mp4; codecs="${data.codecs}"`;if(!window.MediaSource||!MediaSource.isTypeSupported(mime)||new URLSearchParams(location.search).get('audio')==='compat'){if(!audio.canPlayType(mime))throw Error('Your browser or device cannot decode this audio format.');$('playerStatus').textContent='Preparing audio for your browser…';const parts=[];let size=0;for(const token of data.segments){const part=await fetch(`${API}?mode=segment&token=${encodeURIComponent(token)}`,{signal:controller.signal});if(!part.ok)throw Error('Audio segment could not load.');const bytes=await part.arrayBuffer();size+=bytes.byteLength;if(size>100*1024*1024)throw Error('This track is too large for compatibility playback.');parts.push(bytes)}if(controller.signal.aborted)return;objectUrl=URL.createObjectURL(new Blob(parts,{type:'audio/mp4'}));audio.src=objectUrl;await audio.play().catch(()=>{$('playerStatus').textContent='Press play to start the song.'});return}const source=new MediaSource();objectUrl=URL.createObjectURL(source);audio.src=objectUrl;audio.play().catch(()=>{if(!controller.signal.aborted)$('playerStatus').textContent='Press play to start the song.'});await new Promise((resolve,reject)=>{source.addEventListener('sourceopen',resolve,{once:true});controller.signal.addEventListener('abort',()=>reject(Error('Cancelled')),{once:true})});if(controller.signal.aborted)return;const buffer=source.addSourceBuffer(mime);for(const token of data.segments){if(controller.signal.aborted)return;const part=await fetch(`${API}?mode=segment&token=${encodeURIComponent(token)}`,{signal:controller.signal});if(!part.ok)throw Error('Audio segment could not load.');await bufferChunk(buffer,await part.arrayBuffer(),controller.signal)}if(!controller.signal.aborted&&source.readyState==='open')source.endOfStream()}catch(e){if(!controller.signal.aborted)$('playerStatus').textContent=e.message||'This track could not play.'}}
 function playTracks(tracks,index=0){if(!tracks.length)return;radioSession++;radioOn=false;queue=tracks.slice();current=index;startTrack(queue[current])}
 function move(delta){if(radioOn){advanceRadio(delta);return}if(!queue.length)return;current=shuffle&&queue.length>1?Math.floor(Math.random()*queue.length):(current+delta+queue.length)%queue.length;startTrack(queue[current])}
 audio.addEventListener('playing',()=>{$('toggleIcon').setAttribute('href','#pause-icon');$('playerStatus').textContent='playing now.'});audio.addEventListener('pause',()=>{$('toggleIcon').setAttribute('href','#play-icon')});audio.addEventListener('error',()=>{$('playerStatus').textContent='This track could not play. The music service may be unavailable.'});audio.addEventListener('ended',()=>{if(repeat){audio.currentTime=0;audio.play().catch(()=>{})}else if(radioOn||queue.length>1)move(1)});audio.addEventListener('timeupdate',()=>{$('elapsed').textContent=time(audio.currentTime);$('duration').textContent=time(audio.duration);if(document.activeElement!==$('seek'))$('seek').value=audio.duration?Math.floor(audio.currentTime/audio.duration*1000):0});$('seek').oninput=e=>{if(audio.duration)audio.currentTime=Number(e.target.value)/1000*audio.duration};
@@ -144,6 +151,109 @@ async function catalogSearch(term, signal) {
   }
 }
 
+// Chart IDs belong to different catalogs. Match the recording before playback or saving.
+function normalizeName(value) {
+  return value.toLowerCase().normalize('NFKD').replace(/\p{M}/gu,'')
+    .replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+}
+function songName(title) {
+  return normalizeName(title.replace(/\s*[([](?:feat\.?|ft\.?)\s+[^)\]]*[)\]]/gi,''));
+}
+function artistNames(name) {
+  return [name, ...name.split(/\s+(?:&|x|with|feat\.?|featuring|ft\.?)\s+|,\s*/i)].map(normalizeName).filter(Boolean);
+}
+async function resolveChartTrack(entry, signal) {
+  if (entry.recording) return entry.recording;
+  const title = songName(entry.title);
+  const artists = artistNames(entry.channel);
+  for (const term of [entry.title + ' ' + (artists[1] || artists[0]), entry.title]) {
+    const hits = await catalogSearch(term.slice(0,100), signal);
+    const match = hits.find(track => track.id && songName(track.title) === title &&
+      artistNames(track.channel || '').some(artist => artists.includes(artist)));
+    if (match) { entry.recording = match; return match; }
+  }
+  throw Error('This chart recording is unavailable in the player.');
+}
+let station = 'trending';
+let shownChartTracks = 0;
+const chartCache = new Map();
+const pendingCharts = new Map();
+async function getChart(key) {
+  if (chartCache.has(key)) return chartCache.get(key);
+  if (pendingCharts.has(key)) return pendingCharts.get(key);
+  const pending = (async () => {
+    const response = await fetch('/api/mu?mode=chart&chart=' + key, {signal:AbortSignal.timeout(12000)});
+    if (!response.ok) throw Error('Chart unavailable');
+    const {tracks} = await response.json();
+    if (!Array.isArray(tracks) || !tracks.length) throw Error('Empty chart');
+    const entries = tracks.map(track => ({...track, chartEntry:true}));
+    chartCache.set(key, entries);
+    return entries;
+  })();
+  pendingCharts.set(key, pending);
+  try { return await pending; } finally { pendingCharts.delete(key); }
+}
+function showChartRows() {
+  const entries = chartCache.get(station);
+  if (!entries) { selectStation(station); return; }
+  const end = Math.min(shownChartTracks + 10, entries.length);
+  for (let i = shownChartTracks; i < end; i++) {
+    const entry = entries[i];
+    const item = row(entry, {
+      label:'+', aria:'Add ' + entry.title + ' to a playlist',
+      action:async () => {
+        const button = item.querySelector('button');
+        button.disabled = true;
+        try { addToPlaylist(await resolveChartTrack(entry)); }
+        catch (error) { if (item.isConnected) $('chartStatus').textContent = error.message; }
+        finally { button.disabled = false; }
+      }
+    });
+    item.querySelector('.thumb').textContent = entry.rank;
+    item.querySelector('.track-main').onclick = () => playTracks(entries, i);
+    $('chartList').append(item);
+  }
+  shownChartTracks = end;
+  $('moreChart').hidden = end >= entries.length;
+}
+async function selectStation(key) {
+  station = key;
+  const personal = key === 'personal';
+  $('chartPanel').hidden = personal;
+  $('personalPanel').hidden = !personal;
+  for (const button of $('radioViews').querySelectorAll('button')) {
+    button.setAttribute('aria-pressed', String(button.dataset.station === key));
+  }
+  $('playRadio').textContent = personal ? 'Play radio' : 'Play chart';
+  $('playRadio').disabled = !personal;
+  if (personal) return;
+  $('chartSource').textContent = key === 'trending' ? 'U.S. iTunes top downloads' : 'Apple Music · Most played in the U.S.';
+  $('chartStatus').textContent = 'Loading chart…';
+  $('chartList').replaceChildren();
+  shownChartTracks = 0;
+  $('moreChart').hidden = true;
+  $('moreChart').textContent = 'More songs';
+  const request = ++chartRequest;
+  try {
+    await getChart(key);
+    if (station !== key || request !== chartRequest) return;
+    $('chartStatus').textContent = '';
+    $('playRadio').disabled = false;
+    showChartRows();
+  } catch {
+    if (station !== key || request !== chartRequest) return;
+    $('chartStatus').textContent = 'Could not load this chart.';
+    $('moreChart').textContent = 'Retry';
+    $('moreChart').hidden = false;
+  }
+}
+let chartRequest = 0;
+for (const button of $('radioViews').querySelectorAll('button')) {
+  button.onclick = () => selectStation(button.dataset.station);
+}
+$('moreChart').onclick = showChartRows;
+selectStation(station);
+
 // Browse outwards from artists and song titles. Refill from today's chart when a branch ends.
 const radioTracks = [];
 const radioIds = new Set();
@@ -177,8 +287,8 @@ async function chartSeeds() {
   if (chartLoaded) return;
   chartLoaded = true;
   try {
-    const response = await fetch('/api/mu?mode=chart', {signal:AbortSignal.timeout(5000)});
-    if (response.ok) for (const artist of mix((await response.json()).artists)) addSeed(artistSeeds, artist);
+    const entries = await getChart('popular');
+    for (const track of mix(entries)) addSeed(artistSeeds, track.channel);
   } catch {}
 }
 function appendRecommendations(tracks) {
@@ -245,6 +355,11 @@ async function advanceRadio(delta) {
   else $('playerStatus').textContent = 'Radio paused. Load more songs to continue.';
 }
 $('playRadio').onclick = async () => {
+  if (station !== 'personal') {
+    const tracks = chartCache.get(station);
+    if (tracks?.length) playTracks(tracks);
+    return;
+  }
   const generation = ++radioSession;
   if (!radioTracks.length) await moreRadio();
   if (generation === radioSession) startRadio(0);

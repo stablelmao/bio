@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>mu(sic) • aidan.im</title>
 <link rel="stylesheet" href="/style.css?v=picks-1">
-<link rel="stylesheet" href="/mu-player.css?v=radio-1">
+<link rel="stylesheet" href="/mu-player.css?v=radio-charts-1">
 <link rel="stylesheet" href="/media-menu.css?v=1">
 <script src="/media-menu.js?v=1" defer></script>
 </head>
@@ -142,9 +142,21 @@
 </div>
 </section>
 <section class="media-panel" id="discover">
-<div class="row-title"><h2>discover radio<span>.</span></h2><button type="button" id="playRadio">Play radio</button></div>
+<div class="row-title"><h2>discover radio<span>.</span></h2><button type="button" id="playRadio">Play chart</button></div>
+<div id="radioViews" role="group" aria-label="Radio stations">
+<button type="button" data-station="trending" aria-pressed="true">Trending</button>
+<button type="button" data-station="popular" aria-pressed="false">Popular</button>
+<button type="button" data-station="personal" aria-pressed="false">For you</button>
+</div>
+<div id="chartPanel">
+<p class="hint" id="chartSource">U.S. iTunes top downloads</p>
+<p class="hint" id="chartStatus" role="status"></p><div id="chartList"></div>
+<button type="button" id="moreChart" hidden>More songs</button>
+</div>
+<div id="personalPanel" hidden>
 <p class="hint" id="radioStatus" role="status"></p>
 <div id="radioList"></div><button type="button" id="moreSongs">More songs</button>
+</div>
 </section>
 <section class="media-panel library" id="library">
 <div class="row-title">
@@ -159,7 +171,7 @@
 </div>
 </div></div>
 </main>
-<script src="/mu-player.js?v=radio-1" defer>
+<script src="/mu-player.js?v=radio-charts-1" defer>
 </script>
 
 </body>

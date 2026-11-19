@@ -20,13 +20,24 @@ module.exports = async function handler(req,res){
  res.setHeader('Access-Control-Allow-Origin','https://aidan.im');res.setHeader('Vary','Origin');res.setHeader('Cache-Control','no-store');
  if(req.method!=='GET')return res.status(405).json({error:'Method not allowed.'});
  if (req.query.mode === 'chart') {
+   const chart = req.query.chart || 'popular';
+   if (!['trending','popular'].includes(chart)) return res.status(400).json({error:'Unknown chart.'});
+   const downloads = chart === 'trending';
+   const url = downloads ? 'https://itunes.apple.com/us/rss/topsongs/limit=50/json'
+     : 'https://rss.marketingtools.apple.com/api/v2/us/music/most-played/50/songs.json';
    try {
-     const response = await fetch('https://rss.marketingtools.apple.com/api/v2/us/music/most-played/50/songs.json', {signal:AbortSignal.timeout(4000)});
+     const response = await fetch(url, {signal:AbortSignal.timeout(8000)});
      if (!response.ok) throw Error('Chart unavailable');
-     const data = await response.json();
-     const artists = [...new Set(data.feed.results.map(song => song.artistName).filter(name => typeof name === 'string' && name.length <= 100))];
-     res.setHeader('Cache-Control','public, max-age=3600, s-maxage=21600');
-     return res.status(200).json({artists});
+     const {feed} = await response.json();
+     const entries = downloads ? feed.entry : feed.results;
+     const tracks = entries.map((song, i) => ({
+       rank: i + 1,
+       title: downloads ? song['im:name']?.label : song.name,
+       channel: downloads ? song['im:artist']?.label : song.artistName
+     })).filter(song => typeof song.title === 'string' && song.title && typeof song.channel === 'string' && song.channel);
+     if (!tracks.length) throw Error('Empty chart');
+     res.setHeader('Cache-Control','public, max-age=900, s-maxage=3600, stale-while-revalidate=86400');
+     return res.status(200).json({tracks,artists:[...new Set(tracks.map(song => song.channel))]});
    } catch { return res.status(503).json({error:'Chart unavailable.'}); }
  }
  const base=process.env.HIFI_API_URL;if(!base||!process.env.HIFI_API_SECRET)return res.status(503).json({error:'Music service is not connected yet.'});
