@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id);
 const accounts = {
-  music:{endpoint:'/api/mu-admin', field:'tracks', login:'Music admin sign in', title:"Developer's picks", help:"Manage the developer's picks on mu.", noun:'song'},
+  music:{endpoint:'/api/mu-admin', field:'tracks', login:'Aidan sign in', title:"Aidan's picks", help:"Manage the developer's picks on mu(sic).", noun:'song'},
   jaiden:{endpoint:'/api/st-admin', field:'picks', login:'Jaiden sign in', title:"Jaiden's picks", help:'Choose movies and tell everyone why you like them.', noun:'movie'}
 };
 let account = 'music', selection = [], version = 0, activeSearch;
