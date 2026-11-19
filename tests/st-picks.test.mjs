@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash, pbkdf2Sync} from 'node:crypto';
-import {createMoviePicksHandler} from '../lib/st-picks.mjs';
+import {createMoviePicksHandler, createTvPicksHandler} from '../lib/st-picks.mjs';
 const salt = '0123456789abcdef0123456789abcdef';
 const password = 'test-password-only';
 const hash = pbkdf2Sync(password, salt, 310000, 32, 'sha256').toString('hex');
@@ -23,7 +23,8 @@ function fixture() {
     }
   };
   const handle = createMoviePicksHandler(storage, {ST_JAIDEN_PASSWORD_HASH:`${salt}:${hash}`, ST_SESSION_SECRET:'isolated-test-secret'}, () => clock);
-  return {objects, storage, handle, advance:ms => clock += ms};
+  const tvHandle = createTvPicksHandler(storage, {ST_RYVER_PASSWORD_HASH:`${salt}:${hash}`, ST_SESSION_SECRET:'isolated-test-secret'}, () => clock);
+  return {objects, storage, handle, tvHandle, advance:ms => clock += ms};
 }
 function post(data, cookie = '', origin = 'https://aidan.im') {
   return new Request('https://aidan.im/api/st-admin', {method:'POST', headers:{'Content-Type':'application/json',origin,cookie}, body:JSON.stringify(data)});
@@ -184,4 +185,28 @@ test('simultaneous password changes cannot overwrite one another', async () => {
   };
   const responses = await Promise.all([change('192.0.2.1','chosen-password-one'),change('192.0.2.2','chosen-password-two')]);
   assert.deepEqual(responses.map(r => r.status).sort(),[200,409]);
+});
+
+test('Ryver manages a separate TV collection and cannot access Jaiden using his session', async () => {
+  const f = fixture(), movieCookie = await login(f);
+  const response = await f.tvHandle(post({action:'login',password}));
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).account,'ryver');
+  assert.match(response.headers.get('set-cookie'),/Path=\/api\/tv-admin/);
+  const tvCookie = response.headers.get('set-cookie').split(';')[0];
+  assert.equal((await f.handle(post({action:'save',picks:[]},tvCookie))).status,401);
+  assert.equal((await f.handle(post({action:'save',picks:[]},tvCookie.replace('st_ryver=','st_jaiden=')))).status,401);
+  assert.equal((await f.tvHandle(post({action:'save',picks:[]},movieCookie))).status,401);
+  const show = {...favorite,id:1399,title:'Example TV show'};
+  assert.equal((await f.tvHandle(post({action:'save',picks:[show]},tvCookie))).status,200);
+  assert.ok(f.objects.has('st/ryver-picks.json'));
+  assert.deepEqual((await (await f.handle(new Request('https://aidan.im/api/st-admin'))).json()).picks,[]);
+  assert.equal((await (await f.tvHandle(new Request('https://aidan.im/api/tv-admin'))).json()).picks[0].title,show.title);
+  const change = await f.tvHandle(post({action:'change-password',currentPassword:password,newPassword:'ryver-new-test-password'},tvCookie));
+  assert.equal(change.status,200);
+  assert.ok(f.objects.has('st/ryver-credentials.json'));
+  assert.equal(f.objects.has('st/jaiden-credentials.json'),false);
+  assert.equal((await f.tvHandle(post({action:'save',picks:[]},tvCookie))).status,401);
+  assert.equal((await f.tvHandle(post({action:'save',picks:[]},change.headers.get('set-cookie').split(';')[0]))).status,200);
+  assert.equal((await f.handle(post({action:'save',picks:[]},movieCookie))).status,200);
 });

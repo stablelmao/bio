@@ -4,6 +4,7 @@ const season = byId('season');
 const episode = byId('episode');
 const frame = byId('frame');
 let mediaType = 'movie';
+let collection = 'popular';
 let searchRequest;
 let watchRequest;
 let selected;
@@ -48,14 +49,38 @@ async function search() {
   searchRequest = controller;
   const q = query.value.trim();
   const label = mediaType === 'tv' ? 'TV shows' : 'movies';
-  byId('heading').textContent = q ? 'Search results' : 'Popular ' + label;
+  const curated = collection === 'picks';
+  const owner = mediaType === 'tv' ? 'Ryver' : 'Jaiden';
+  byId('picks').textContent = owner + "'s picks";
+  byId('popular').setAttribute('aria-pressed', String(!curated));
+  byId('picks').setAttribute('aria-pressed', String(curated));
+  byId('heading').textContent = curated ? owner + "'s picks" : q ? 'Search results' : 'Popular ' + label;
   byId('status').textContent = 'Finding ' + label + '…';
   byId('results').replaceChildren();
   try {
-    const data = await request({mode:'search', type:mediaType, q}, controller.signal);
+    let items;
+    if (curated) {
+      const endpoint = mediaType === 'tv' ? '/api/tv-admin' : '/api/st-admin';
+      const response = await fetch(endpoint, {cache:'no-store', signal:controller.signal});
+      const data = await response.json();
+      if (!response.ok || !Array.isArray(data.picks)) throw Error('Could not load picks.');
+      items = data.picks;
+    } else {
+      const data = await request({mode:'search', type:mediaType, q}, controller.signal);
+      items = data.results;
+    }
     if (controller.signal.aborted) return;
-    byId('results').replaceChildren(...data.results.map(item => card(item)));
-    byId('status').textContent = data.results.length ? '' : 'No ' + label + ' found.';
+    byId('results').replaceChildren(...items.map(item => {
+      if (!curated) return card(item);
+      const article = document.createElement('article');
+      article.className = 'curated-pick';
+      const reason = document.createElement('p');
+      reason.className = 'pick-reason';
+      reason.textContent = item.reason;
+      article.append(card(item), reason);
+      return article;
+    }));
+    byId('status').textContent = items.length ? '' : curated ? owner + "'s favorites are coming soon." : 'No ' + label + ' found.';
   } catch (error) {
     if (!controller.signal.aborted) byId('status').textContent = error.message;
   }
@@ -140,6 +165,7 @@ byId('close').addEventListener('click', () => {
 });
 byId('search').addEventListener('submit', event => {
   event.preventDefault();
+  collection = 'popular';
   search();
 });
 const typeButtons = document.querySelectorAll('[data-type]');
@@ -157,23 +183,13 @@ for (const button of typeButtons) {
 }
 search();
 
-async function loadJaidenPicks() {
-  try {
-    const response = await fetch('/api/st-admin', {cache:'no-store'});
-    const data = await response.json();
-    if (!response.ok || !Array.isArray(data.picks)) throw Error('Could not load picks.');
-    byId('jaiden-picks').replaceChildren(...data.picks.map(item => {
-      const article = document.createElement('article');
-      article.className = 'jaiden-pick';
-      const reason = document.createElement('p');
-      reason.className = 'pick-reason';
-      reason.textContent = item.reason;
-      article.append(card(item, 'movie'), reason);
-      return article;
-    }));
-    byId('jaiden-status').textContent = data.picks.length ? '' : "Jaiden's favorites are coming soon.";
-  } catch {
-    byId('jaiden-status').textContent = "Couldn't load Jaiden's picks right now.";
-  }
-}
-void loadJaidenPicks();
+byId('popular').addEventListener('click', () => {
+  collection = 'popular';
+  query.value = '';
+  search();
+});
+byId('picks').addEventListener('click', () => {
+  collection = 'picks';
+  query.value = '';
+  search();
+});

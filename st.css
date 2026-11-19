@@ -19,10 +19,8 @@
 #series label { display:grid; gap:5px; min-width:0; max-width:100%; color:var(--muted); }
 .stream-page footer { border-top:1px solid #ffffff26; margin-top:48px; padding-top:20px; font-size:13px; color:var(--muted); }
 .sr { position:absolute; clip-path:inset(50%); width:1px; height:1px; overflow:hidden; }
-.jaiden-section { margin-bottom:40px; }
-.stream-page #jaiden-heading span { color:var(--accent); }
-.picks-grid { grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); }
-.jaiden-pick { min-width:0; border:1px solid #ffc2ef38; background:#2c0b29; align-self:start; }
-.stream-page .jaiden-pick .movie { width:100%; }
+.browse-options { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+.curated-pick { min-width:0; border:1px solid #ffc2ef38; background:#2c0b29; align-self:start; }
+.stream-page .curated-pick .movie { width:100%; }
 .pick-reason { padding:12px; margin:0; font-size:14px; line-height:1.6; color:var(--muted); overflow-wrap:anywhere; white-space:pre-wrap; }
 @media(max-width:500px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 12px; } .stream-page h2 { font-size:20px; } }

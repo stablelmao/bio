@@ -1,7 +1,8 @@
 const $ = id => document.getElementById(id);
 const accounts = {
   music:{endpoint:'/api/mu-admin', field:'tracks', login:'Aidan sign in', title:"Aidan's picks", help:"Manage the developer's picks on mu(sic).", noun:'song'},
-  jaiden:{endpoint:'/api/st-admin', field:'picks', login:'Jaiden sign in', title:"Jaiden's picks", help:'Choose movies and tell everyone why you like them.', noun:'movie'}
+  jaiden:{endpoint:'/api/st-admin', field:'picks', login:'Jaiden sign in', title:"Jaiden's picks", help:'Choose movies and tell everyone why you like them.', noun:'movie'},
+  ryver:{endpoint:'/api/tv-admin', field:'picks', login:'Ryver sign in', title:"Ryver's picks", help:'Choose TV shows and tell everyone why you like them.', noun:'TV show'}
 };
 let account = 'music', selection = [], version = 0, activeSearch;
 async function api(endpoint, data) {
@@ -34,10 +35,10 @@ function row(item, index, selected) {
     $('status').textContent = selected ? 'Removed from your selection. Publish to save.' : 'Added to your selection. Publish to save.';
   };
   heading.append(copy, button); article.append(heading);
-  if (selected && account === 'jaiden') {
+  if (selected && account !== 'music') {
     const label = document.createElement('label');
     label.className = 'reason-label'; label.htmlFor = 'reason-' + item.id;
-    label.textContent = 'Why do you like this movie?';
+    label.textContent = 'Why do you like this ' + accounts[account].noun + '?';
     const input = document.createElement('textarea');
     input.id = label.htmlFor; input.maxLength = 600; input.required = true; input.value = item.reason || '';
     input.placeholder = 'What makes it one of your favorites?';
@@ -59,7 +60,7 @@ async function showEditor(currentVersion) {
   if (currentVersion !== version) return;
   selection = data[settings.field]; render();
   $('login').hidden = true; $('editor').hidden = false;
-  $('passwordSettings').hidden = account !== 'jaiden';
+  $('passwordSettings').hidden = account === 'music';
   $('status').textContent = 'Search and add ' + settings.noun + 's, then publish your picks.';
 }
 async function chooseAccount(next) {
@@ -99,7 +100,7 @@ $('find').onsubmit = async event => {
   event.preventDefault(); activeSearch?.abort(); const controller = new AbortController(); activeSearch = controller;
   const currentVersion = version;
   $('status').textContent = 'Searching…'; $('results').replaceChildren();
-  const endpoint = account === 'jaiden' ? '/api/st?mode=search&type=movie&q=' : '/api/mu?mode=search&q=';
+  const endpoint = account === 'music' ? '/api/mu?mode=search&q=' : '/api/st?mode=search&type=' + (account === 'ryver' ? 'tv' : 'movie') + '&q=';
   try {
     const response = await fetch(endpoint + encodeURIComponent($('query').value.trim()),{signal:controller.signal});
     const data = await response.json();
@@ -111,7 +112,7 @@ $('find').onsubmit = async event => {
 };
 $('publish').onclick = async () => {
   const currentVersion = version, settings = accounts[account];
-  if (account === 'jaiden') {
+  if (account !== 'music') {
     const missing = selection.find(item => !item.reason?.trim());
     if (missing) { $('status').textContent = 'Add a reason for ' + missing.title + ' first.'; $('reason-' + missing.id).focus(); return; }
   }
@@ -124,7 +125,7 @@ $('publish').onclick = async () => {
 };
 $('passwordForm').onsubmit = async event => {
   event.preventDefault();
-  if (account !== 'jaiden') return;
+  if (account === 'music') return;
   const currentVersion = version;
   if ($('newPassword').value !== $('confirmPassword').value) {
     $('passwordStatus').textContent = 'The new passwords do not match.';
@@ -134,7 +135,7 @@ $('passwordForm').onsubmit = async event => {
   $('changePassword').disabled = true;
   $('passwordStatus').textContent = 'Saving password…';
   try {
-    await api(accounts.jaiden.endpoint, {
+    await api(accounts[account].endpoint, {
       action:'change-password',
       currentPassword:$('currentPassword').value,
       newPassword:$('newPassword').value
@@ -146,4 +147,5 @@ $('passwordForm').onsubmit = async event => {
     if (version === currentVersion) $('passwordStatus').textContent = error.message;
   } finally { $('changePassword').disabled = false; }
 };
-chooseAccount(new URLSearchParams(location.search).get('account') === 'jaiden' ? 'jaiden' : 'music');
+const requestedAccount = new URLSearchParams(location.search).get('account');
+chooseAccount(Object.hasOwn(accounts, requestedAccount) ? requestedAccount : 'music');
