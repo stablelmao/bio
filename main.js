@@ -45,6 +45,11 @@ function closeMenu() {
   siteNav.classList.remove("is-open");
   navToggle.setAttribute("aria-expanded", "false");
 }
+function syncNavBackground() {
+  siteNav.classList.toggle("is-scrolled", window.scrollY > 0);
+}
+syncNavBackground();
+window.addEventListener("scroll", syncNavBackground, { passive: true });
 siteNav.classList.add("is-enhanced");
 navToggle.hidden = false;
 navToggle.addEventListener("click", () => {
@@ -152,6 +157,7 @@ if (entryGate && !saved.entered && !internalArrival) {
 
 // Reconcile controls when the browser restores a document from its back cache.
 window.addEventListener("pageshow", (event) => {
+  syncNavBackground();
   if (!event.persisted) return;
   try {
     const latest = JSON.parse(sessionStorage.getItem(sessionKey) || "{}");
