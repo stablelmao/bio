@@ -6,7 +6,7 @@
 .row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .stream-page h2 { font-size:23px; letter-spacing:-.04em; color:inherit; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:24px 16px; margin-top:20px; }
-.stream-page .movie { display:block; padding:0; text-align:left; min-width:0; }
+.stream-page .movie { display:block; align-self:start; padding:0; text-align:left; min-width:0; }
 .poster { display:block; width:100%; aspect-ratio:2/3; object-fit:cover; background:#2c0b29; }
 .movie strong { display:block; font-size:15px; line-height:1.4; margin:10px 8px 0; }
 .movie small { display:block; color:var(--muted); font-size:13px; margin:5px 8px 8px; }
