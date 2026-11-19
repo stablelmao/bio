@@ -199,6 +199,8 @@ function displayPage() {
   const searchMode = type === 'search' || type === 'songSearch';
   const browsing = searchMode || type === 'artist' || type === 'album';
   document.body.classList.toggle('browsing-music',browsing);
+  document.querySelector('.discovery-layout').hidden = browsing;
+  document.querySelector('.media-heading').hidden = browsing;
   $('musicBrowser').hidden = !browsing;
   if (!browsing) {
     document.title = 'mu(sic) • aidan.im';
