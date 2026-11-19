@@ -177,7 +177,7 @@ function commentEditor(comment) {
   remove.type = 'button';
   remove.textContent = 'Delete';
   async function mutate(action) {
-    if (action === 'delete' && !confirm('Delete this comment by ' + comment.name + '?')) return;
+    confirmation.hidden = true;
     const generation = wallVersion;
     save.disabled = remove.disabled = input.disabled = true;
     try {
@@ -190,8 +190,20 @@ function commentEditor(comment) {
     finally { save.disabled = remove.disabled = input.disabled = false; }
   }
   form.onsubmit = event => { event.preventDefault(); mutate('edit'); };
-  remove.onclick = () => mutate('delete');
-  form.append(label, save, remove);
+  const confirmation = document.createElement('div');
+  confirmation.hidden = true;
+  confirmation.textContent = 'Delete this comment? ';
+  const keep = document.createElement('button');
+  keep.type = 'button';
+  keep.textContent = 'Keep';
+  keep.onclick = () => { confirmation.hidden = true; remove.focus(); };
+  const yes = document.createElement('button');
+  yes.type = 'button';
+  yes.textContent = 'Delete comment';
+  yes.onclick = () => mutate('delete');
+  remove.onclick = () => { confirmation.hidden = false; keep.focus(); };
+  confirmation.append(keep, yes);
+  form.append(label, save, remove, confirmation);
   return form;
 }
 async function loadComments(older = false) {

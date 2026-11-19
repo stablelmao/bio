@@ -64,3 +64,40 @@
 #chartList .thumb { font-variant-numeric:tabular-nums; }
 #chartSource { margin:8px 0; }
 #moreChart,#moreSongs { margin-top:12px; }
+
+.music-page [hidden] { display:none !important; }
+.search-launch,.search-recents a,#browseSearch { color:var(--accent); text-decoration:none; }
+.search-launch { display:flex; align-items:center; gap:12px; border:1px solid #ffffff35; background:#ffffff0b; padding:16px 20px; margin-bottom:20px; }
+.search-launch span { font-size:1.6em; line-height:1; }
+.browsing-music .media-heading,.browsing-music .discovery-layout { display:none; }
+#musicBrowser { max-width:1040px; margin:0 auto; min-height:75vh; padding:24px 0 80px; }
+.browser-toolbar,.dialog-heading,#resultFilters,.search-recents,#browsePlaying { display:flex; align-items:center; gap:10px; }
+.browser-toolbar { justify-content:space-between; }
+#musicBrowser h1 { margin:30px 0 18px; font-size:clamp(38px,6vw,78px); letter-spacing:-.06em; line-height:1.05; overflow-wrap:anywhere; }
+#musicBrowser h1 span,.artist-link { color:var(--accent); }
+.artist-link { text-decoration:none; }
+.artist-link:hover,.release-card:hover strong,.artist-card:hover strong { text-decoration:underline; }
+#musicBrowser h2 { margin:22px 0 12px; }
+#resultFilters,.search-recents { flex-wrap:wrap; margin:14px 0; }
+#resultFilters button { border:1px solid #ffffff35; border-radius:999px; padding:7px 18px; }
+#resultFilters [aria-pressed="true"] { background:var(--accent); color:#291025; }
+#searchPage .search { max-width:760px; }
+.search-recents a { padding:8px 12px; background:#ffffff0e; }
+.artist-grid,.release-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(145px,40%),1fr)); gap:15px; }
+.artist-card,.release-card { display:flex; flex-direction:column; gap:6px; color:inherit; text-decoration:none; min-width:0; overflow-wrap:anywhere; }
+.artist-monogram { display:grid; place-items:center; border-radius:50%; height:62px; width:62px; background:#552249; color:#ffd2f4; font-size:22px; font-weight:700; }
+.release-card img { aspect-ratio:1; width:100%; object-fit:cover; }
+.album-art { width:min(180px,45%); height:auto; }
+#musicBrowser small,.detail-meta,#musicBrowser [role=status] { color:var(--muted); }
+#musicBrowser .track-heading { justify-content:space-between; }
+#browsePlaying { position:sticky; bottom:8px; margin-top:24px; padding:8px 14px; background:#240e23; border:1px solid #ffffff42; justify-content:space-between; }
+#browsePlaying a { color:inherit; font-weight:700; }
+#playlistDialog { margin:auto; padding:22px; border:1px solid #ffffff45; color:#fff4fc; background:#291025; width:min(420px,calc(100% - 32px)); max-height:80dvh; overflow:auto; }
+#playlistDialog::backdrop { background:#100812bc; }
+.dialog-heading { justify-content:space-between; }
+.dialog-heading h2 { margin:0; }
+#playlistChoices,#playlistForm { display:grid; gap:8px; margin-top:16px; }
+#playlistChoices:empty,#playlistContext:empty,#playlistFeedback:empty { display:none; }
+#playlistForm input { width:100%; background:#ffffff0d; border:1px solid #ffffff46; color:inherit; padding:12px; }
+#playlistChoices button { text-align:left; border:1px solid #ffffff30; padding:10px; }
+#musicNotice:not(:empty) { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#35112f; color:#fff; border:1px solid #ffffff46; padding:12px 18px; z-index:5; }

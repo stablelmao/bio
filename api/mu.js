@@ -1,5 +1,6 @@
 const { Readable } = require('node:stream');
 const crypto = require('node:crypto');
+const musicDirectory = require('../lib/music-directory.cjs');
 const key = () => crypto.createHash('sha256').update(process.env.HIFI_API_SECRET || '').digest();
 function seal(value){const iv=crypto.randomBytes(12),c=crypto.createCipheriv('aes-256-gcm',key(),iv);const data=Buffer.concat([c.update(JSON.stringify({url:value,exp:Date.now()+10*60*1000})),c.final()]);return Buffer.concat([iv,c.getAuthTag(),data]).toString('base64url')}
 function unseal(token){const b=Buffer.from(token,'base64url');if(b.length<30||b.length>6000)throw Error('Invalid token');const d=crypto.createDecipheriv('aes-256-gcm',key(),b.subarray(0,12));d.setAuthTag(b.subarray(12,28));const o=JSON.parse(Buffer.concat([d.update(b.subarray(28)),d.final()]).toString());if(o.exp<Date.now())throw Error('Expired');return allowed(o.url)}
@@ -19,6 +20,7 @@ function dashSegments(xml){
 module.exports = async function handler(req,res){
  res.setHeader('Access-Control-Allow-Origin','https://aidan.im');res.setHeader('Vary','Origin');res.setHeader('Cache-Control','no-store');
  if(req.method!=='GET')return res.status(405).json({error:'Method not allowed.'});
+ if (musicDirectory.modes.has(req.query.mode)) return musicDirectory.directory(req,res);
  if (req.query.mode === 'chart') {
    const chart = req.query.chart || 'popular';
    if (!['trending','popular'].includes(chart)) return res.status(400).json({error:'Unknown chart.'});

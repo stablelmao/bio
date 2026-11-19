@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>mu(sic) • aidan.im</title>
 <link rel="stylesheet" href="/style.css?v=picks-1">
-<link rel="stylesheet" href="/mu-player.css?v=radio-charts-1">
+<link rel="stylesheet" href="/mu-player.css?v=browse-1">
 <link rel="stylesheet" href="/media-menu.css?v=1">
 <script src="/media-menu.js?v=1" defer></script>
 </head>
@@ -50,7 +50,7 @@
 <nav class="discovery-nav" aria-label="Music library">
 <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="music-menu">Music menu</button>
 <div id="music-menu" class="menu-items">
-<a href="#discover">Discover radio</a><a href="#now">Now playing</a><a href="#songSearch">Search</a>
+<a href="#discover">Discover radio</a><a href="#now">Now playing</a><a href="#search">Search</a>
 <a href="#curators">Developer’s picks</a><a href="#library">Your playlists</a>
 </div>
 </nav>
@@ -121,26 +121,7 @@
 </section>
 </div>
 <div class="right-column">
-<section class="media-panel browse">
-<h2>search music<span>.</span>
-</h2>
-<div id="songSearch">
-<form id="search" class="search">
-<svg viewBox="0 0 24 24" aria-hidden="true">
-<circle cx="10.5" cy="10.5" r="6.5"/>
-<path d="m16 16 4 4"/>
-</svg>
-<input aria-controls="suggestions" id="query" placeholder="search songs or artists" maxlength="100" autocomplete="off" aria-label="Search songs or artists" required>
-<button type="submit">search</button>
-</form>
-<div id="suggestions" class="suggestions" hidden>
-<p class="hint" id="searchStatus" role="status">
-</p>
-<div id="results" class="track-list">
-</div>
-</div>
-</div>
-</section>
+<a class="search-launch" href="#search"><span aria-hidden="true">⌕</span> Search songs or artists</a>
 <section class="media-panel" id="discover">
 <div class="row-title"><h2>discover radio<span>.</span></h2><button type="button" id="playRadio">Play chart</button></div>
 <div id="radioViews" role="group" aria-label="Radio stations">
@@ -170,10 +151,27 @@
 </div>
 </div>
 </div></div>
+<section id="musicBrowser" hidden>
+<div class="browser-toolbar"><button type="button" id="browseBack">← Back</button><a href="#search" id="browseSearch">Search music</a></div>
+<section id="searchPage" hidden>
+<h1>search<span>.</span></h1>
+<form id="search" class="search" role="search"><input id="query" type="search" maxlength="100" placeholder="Songs or artists" aria-label="Search songs or artists" autocomplete="off"><button type="submit">Search</button></form>
+<div id="resultFilters" role="group" aria-label="Filter search results"><button data-filter="all" aria-pressed="true">All</button><button data-filter="songs" aria-pressed="false">Songs</button><button data-filter="artists" aria-pressed="false">Artists</button></div>
+<div id="recents"></div>
+<section id="searchArtists" hidden><h2>Artists</h2><p role="status" id="artistsStatus"></p><div id="artistResults" class="artist-grid"></div></section>
+<section id="searchSongs" hidden><h2>Songs</h2><p role="status" id="songsStatus"></p><div id="songResults"></div></section>
+</section>
+<section id="detailPage" hidden><h1 id="detailHeading" tabindex="-1"></h1><p id="detailStatus" role="status"></p><div id="detailBody"></div></section>
+<div id="browsePlaying" hidden><a href="#now" id="browseTrack"></a><button id="browseToggle" type="button">Play</button></div>
+</section>
+<dialog id="playlistDialog" aria-labelledby="playlistHeading"><div class="dialog-heading"><h2 id="playlistHeading"></h2><button type="button" id="closePlaylist" aria-label="Close playlist dialog">×</button></div><p id="playlistContext"></p><div id="playlistChoices"></div><form id="playlistForm"><label for="playlistName">Playlist name</label><input id="playlistName" maxlength="60" autocomplete="off" required><button type="submit" id="playlistSubmit">Create playlist</button></form><p role="status" id="playlistFeedback"></p></dialog>
+<p id="musicNotice" role="status"></p>
 </main>
-<script src="/mu-player.js?v=radio-charts-1" defer>
+<script src="/mu-player.js?v=browse-1" defer>
 </script>
 
+<script src="/mu-library.js?v=browse-1" defer></script>
+<script src="/mu-browse.js?v=browse-1" defer></script>
 </body>
 </html>
 
