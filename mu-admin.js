@@ -59,12 +59,15 @@ async function showEditor(currentVersion) {
   if (currentVersion !== version) return;
   selection = data[settings.field]; render();
   $('login').hidden = true; $('editor').hidden = false;
+  $('passwordSettings').hidden = account !== 'jaiden';
   $('status').textContent = 'Search and add ' + settings.noun + 's, then publish your picks.';
 }
 async function chooseAccount(next) {
   activeSearch?.abort(); account = next; const currentVersion = ++version;
   const settings = accounts[account]; selection = [];
   $('login').hidden = false; $('editor').hidden = true; $('password').value = '';
+  $('passwordSettings').hidden = true; $('passwordSettings').open = false;
+  $('passwordForm').reset(); $('passwordStatus').textContent = '';
   $('loginTitle').textContent = settings.login; $('loginHelp').textContent = settings.help;
   $('editorTitle').textContent = settings.title; $('query').value = '';
   $('query').placeholder = 'Search for a ' + settings.noun;
@@ -118,5 +121,29 @@ $('publish').onclick = async () => {
     if (version === currentVersion) $('status').textContent = 'Published! Everyone can see your picks now.';
   } catch (error) { if (version === currentVersion) $('status').textContent = error.message; }
   finally { $('publish').disabled = false; }
+};
+$('passwordForm').onsubmit = async event => {
+  event.preventDefault();
+  if (account !== 'jaiden') return;
+  const currentVersion = version;
+  if ($('newPassword').value !== $('confirmPassword').value) {
+    $('passwordStatus').textContent = 'The new passwords do not match.';
+    $('confirmPassword').focus();
+    return;
+  }
+  $('changePassword').disabled = true;
+  $('passwordStatus').textContent = 'Saving password…';
+  try {
+    await api(accounts.jaiden.endpoint, {
+      action:'change-password',
+      currentPassword:$('currentPassword').value,
+      newPassword:$('newPassword').value
+    });
+    if (version !== currentVersion) return;
+    $('passwordForm').reset();
+    $('passwordStatus').textContent = 'Password changed. Your other sessions have been signed out.';
+  } catch (error) {
+    if (version === currentVersion) $('passwordStatus').textContent = error.message;
+  } finally { $('changePassword').disabled = false; }
 };
 chooseAccount(new URLSearchParams(location.search).get('account') === 'jaiden' ? 'jaiden' : 'music');

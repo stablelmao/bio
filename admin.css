@@ -22,3 +22,8 @@
 .admin-page textarea:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
 #publish { margin-top:20px; }
 @media(max-width:420px) { .admin-shell { padding-inline:20px; } .admin-page .media-heading h1 { font-size:52px; } }
+
+#passwordSettings { margin-top:32px; border-top:1px solid #ffffff26; padding-top:20px; }
+#passwordSettings summary { cursor:pointer; padding:8px 0; }
+#passwordForm { margin-top:16px; }
+#passwordHelp { margin:0 0 8px; }

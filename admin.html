@@ -7,8 +7,8 @@
 <meta name="theme-color" content="#21071e">
 <title>admin • aidan.im</title>
 <link rel="stylesheet" href="/style.css?v=picks-1">
-<link rel="stylesheet" href="/admin.css?v=1">
-<script src="/mu-admin.js?v=2" defer></script>
+<link rel="stylesheet" href="/admin.css?v=password-2">
+<script src="/mu-admin.js?v=password-3" defer></script>
 </head>
 <body class="media-page admin-page">
 <main class="admin-shell">
@@ -40,6 +40,20 @@
 <h2 class="selection-title">your selection.</h2>
 <div id="selected" class="admin-selection"></div>
 <button id="publish" type="button">[ publish picks ]</button>
+<details id="passwordSettings" hidden>
+<summary>Change password</summary>
+<form id="passwordForm" class="admin-form">
+<label for="currentPassword">Current password</label>
+<input id="currentPassword" type="password" autocomplete="current-password" required maxlength="256">
+<label for="newPassword">New password</label>
+<input id="newPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="256" aria-describedby="passwordHelp">
+<p class="hint" id="passwordHelp">Use 8–256 characters.</p>
+<label for="confirmPassword">Confirm new password</label>
+<input id="confirmPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="256">
+<button id="changePassword" type="submit">[ save password ]</button>
+</form>
+<p id="passwordStatus" class="hint" role="status"></p>
+</details>
 </section>
 </main>
 </body>
