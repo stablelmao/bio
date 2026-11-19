@@ -6,9 +6,11 @@
 <meta name="theme-color" content="#21071e">
 <meta name="robots" content="noindex,nofollow">
 <title>mu(sic) • aidan.im</title>
-<link rel="stylesheet" href="/mu-player.css?v=6">
+<link rel="stylesheet" href="/style.css?v=media-1">
+<link rel="stylesheet" href="/mu-player.css?v=7">
 </head>
-<body>
+<body class="media-page music-page" data-page="music">
+
 <svg class="icon-bank" xmlns="http://www.w3.org/2000/svg">
 <symbol id="play-icon" viewBox="0 0 24 24">
 <path d="M8 5v14l11-7z"/>
@@ -30,14 +32,14 @@
 </symbol>
 </svg>
 <main class="shell">
-<header>
+<header class="media-header">
 <div class="brand">
-  <a href="/mu" style="color: inherit; text-decoration: none;">mu(sic)</a>, a branch of
-  <a href="https://aidan.im" style="text-decoration: none;"><span>aidan.im</span></a>
+  <a href="/mu">mu(sic)</a>, a branch of
+  <a href="/"><span>aidan.im</span></a>
 </div>
-<button id="libraryTab" class="pill">your playlists</button>
+<button id="libraryTab" class="media-link">[ your playlists ]</button>
 </header>
-<section class="hero">
+<section class="media-heading">
 <h1>soundtrack<br>
 <em>your day.</em>
 </h1>
@@ -45,7 +47,7 @@
 <div class="layout">
 <div class="left-column">
 <p class="warmup">The first song search can take like a minute or two btw so dont fret.</p>
-<section class="glass player-card" aria-label="Now playing">
+<section class="media-panel player-card" aria-label="Now playing">
 <div class="track-head">
 <div class="cover" id="cover">
 <span>mu!</span>
@@ -95,7 +97,7 @@
 <p class="hint" id="playerStatus" role="status">
 </p>
 </section>
-<section class="glass picks">
+<section class="media-panel picks">
 <div class="row-title">
 <div>
 <h2>developer's picks<span>.</span>
@@ -109,7 +111,7 @@
 </section>
 </div>
 <div class="right-column">
-<section class="glass browse">
+<section class="media-panel browse">
 <h2>search music<span>.</span>
 </h2>
 <div id="songSearch">
@@ -129,13 +131,10 @@
 </div>
 </div>
 </section>
-<section class="glass library" id="library">
+<section class="media-panel library" id="library">
 <div class="row-title">
-<div>
-<h2>your playlists<span>.</span>
-</h2>
-</div>
-<button class="small" id="create">+ new</button>
+<h2>your playlists<span>.</span></h2>
+<button class="add-button" id="create" aria-label="Create playlist">+</button>
 </div>
 <p class="hint">saved on this device and browser.</p>
 <div id="playlists">
@@ -144,8 +143,9 @@
 </div>
 </div>
 </main>
-<script src="/mu-player.js?v=6" defer>
+<script src="/mu-player.js?v=7" defer>
 </script>
+
 </body>
 </html>
 

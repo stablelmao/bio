@@ -4,7 +4,46 @@ let playlists;try{playlists=JSON.parse(localStorage.getItem('mu-hifi-playlists')
 let picks=[],queue=[],current=-1,shuffle=false,repeat=false;
 function save(){try{localStorage.setItem('mu-hifi-playlists',JSON.stringify(playlists))}catch{$('playerStatus').textContent='Could not save playlists on this device.'}renderPlaylists()}
 function time(s){if(!Number.isFinite(s))return '0:00';s=Math.floor(s);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
-function row(track,extra){let el=document.createElement('div');el.className='track';let image=document.createElement('div');image.className='thumb';fillCover(image,track);el.append(image);let info=document.createElement('div');info.className='track-main';info.tabIndex=0;info.setAttribute('role','button');let title=document.createElement('strong'),artist=document.createElement('small');title.textContent=track.title;artist.textContent=[track.channel,track.album,track.duration?time(track.duration):''].filter(Boolean).join(' · ');info.append(title,artist);info.onclick=()=>playTracks([track],0);info.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();info.click()}};el.append(info);if(extra){let button=document.createElement('button');button.textContent=extra.label;button.setAttribute('aria-label',extra.aria||extra.label);button.onclick=extra.action;el.append(button)}return el}
+function row(track, extra) {
+  const el = document.createElement('div');
+  el.className = 'track';
+  const image = document.createElement('div');
+  image.className = 'thumb';
+  fillCover(image, track);
+  const copy = document.createElement('div');
+  copy.className = 'track-copy';
+  const heading = document.createElement('div');
+  heading.className = 'track-heading';
+  const info = document.createElement('div');
+  info.className = 'track-main';
+  info.tabIndex = 0;
+  info.setAttribute('role', 'button');
+  info.setAttribute('aria-label', 'Play ' + track.title);
+  const title = document.createElement('strong');
+  title.textContent = track.title;
+  info.append(title);
+  info.onclick = () => playTracks([track], 0);
+  info.onkeydown = event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      info.click();
+    }
+  };
+  heading.append(info);
+  if (extra) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = extra.label;
+    button.setAttribute('aria-label', extra.aria || extra.label);
+    button.onclick = extra.action;
+    heading.append(button);
+  }
+  const artist = document.createElement('small');
+  artist.textContent = [track.channel, track.album, track.duration ? time(track.duration) : ''].filter(Boolean).join(' · ');
+  copy.append(heading, artist);
+  el.append(image, copy);
+  return el;
+}
 function showTrack(t){$('title').textContent=t.title;$('artist').textContent=t.channel;$('album').textContent=t.album||'';fillCover($('cover'),t);if('mediaSession' in navigator&&window.MediaMetadata){const metadata={title:t.title,artist:t.channel,album:t.album||''};if(t.cover)metadata.artwork=[{src:API+'?mode=cover&id='+encodeURIComponent(t.cover),sizes:'320x320',type:'image/jpeg'}];navigator.mediaSession.metadata=new MediaMetadata(metadata)}$('playerStatus').textContent='Loading track…'}
 let currentStream=null,objectUrl=null;
 function bufferChunk(buffer,data,signal){return new Promise((resolve,reject)=>{if(signal.aborted)return reject(Error('Cancelled'));const done=()=>{buffer.removeEventListener('error',fail);resolve()};const fail=()=>{buffer.removeEventListener('updateend',done);reject(Error('Audio buffer failed'))};buffer.addEventListener('updateend',done,{once:true});buffer.addEventListener('error',fail,{once:true});try{buffer.appendBuffer(data)}catch(e){buffer.removeEventListener('updateend',done);buffer.removeEventListener('error',fail);reject(e)}})}
@@ -98,4 +137,4 @@ songSearch.addEventListener('focusout', event => {
 function addToPlaylist(track){if(!playlists.length){let name=prompt('Name your new playlist:');if(!name?.trim())return;playlists.push({name:name.trim().slice(0,60),tracks:[]})}let n=prompt('Add to which playlist?\n'+playlists.map((p,i)=>`${i+1}. ${p.name}`).join('\n'),'1');let index=Number(n)-1;if(!Number.isInteger(index)||!playlists[index])return;if(!playlists[index].tracks.some(t=>t.id===track.id))playlists[index].tracks.push(track);save();$('searchStatus').textContent=`Added to ${playlists[index].name}.`}
 function renderPlaylists(){let box=$('playlists');box.replaceChildren();if(!playlists.length){let p=document.createElement('p');p.className='empty';p.textContent='No playlists yet. Make one and save your favorites.';box.append(p);return}playlists.forEach((p,i)=>{let div=document.createElement('div');div.className='playlist';let h=document.createElement('h3');h.textContent=`${p.name} · ${p.tracks.length} songs`;div.append(h);let buttons=document.createElement('div');buttons.className='list-buttons';for(let [label,fn] of [['play',()=>playTracks(p.tracks)],['view',()=>{let area=div.querySelector('.track-list');area.hidden=!area.hidden}],['delete',()=>{if(confirm(`Delete ${p.name}?`)){playlists.splice(i,1);save()}}]]){let b=document.createElement('button');b.textContent=label;b.onclick=fn;buttons.append(b)}div.append(buttons);let area=document.createElement('div');area.className='track-list';area.hidden=true;p.tracks.forEach((t,j)=>area.append(row(t,{label:'×',aria:'Remove from playlist',action:()=>{p.tracks.splice(j,1);save()}})));div.append(area);box.append(div)})}
 $('create').onclick=()=>{let name=prompt('Playlist name:');if(name?.trim()){playlists.push({name:name.trim().slice(0,60),tracks:[]});save()}};$('libraryTab').onclick=()=>$('library').scrollIntoView({behavior:'smooth'});$('playPicks').onclick=()=>playTracks(picks);
-async function loadPicks(){try{let r=await fetch('/api/mu-admin');let d=await r.json();if(!r.ok)throw Error(d.error);picks=d.tracks;$('picksList').replaceChildren();if(!picks.length){let p=document.createElement('p');p.className='empty';p.textContent='Aidan’s picks are coming soon.';$('picksList').append(p);return}picks.forEach((t,i)=>{let el=row(t);el.querySelector('.track-main').onclick=()=>playTracks(picks,i);$('picksList').append(el)})}catch{$('picksList').textContent='Could not load picks right now.'}}renderPlaylists();loadPicks();
+async function loadPicks(){try{let r=await fetch('/api/mu-admin');let d=await r.json();if(!r.ok)throw Error(d.error);picks=d.tracks;$('picksList').replaceChildren();if(!picks.length){let p=document.createElement('p');p.className='empty';p.textContent='Aidan’s picks are coming soon.';$('picksList').append(p);return}picks.forEach((t,i)=>{let el=row(t,{label:'+',aria:'Add '+t.title+' to a playlist',action:()=>addToPlaylist(t)});el.querySelector('.track-main').onclick=()=>playTracks(picks,i);$('picksList').append(el)})}catch{$('picksList').textContent='Could not load picks right now.'}}renderPlaylists();loadPicks();

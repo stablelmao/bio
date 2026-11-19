@@ -10,6 +10,8 @@ let saved = {};
 try {
   saved = JSON.parse(sessionStorage.getItem(sessionKey) || "{}") || {};
 } catch {}
+let desiredPlaying = saved.playing === true;
+let leaving = false;
 
 // Keep previously shared hash links working, but send them to actual documents.
 const legacyRoutes = {
@@ -30,13 +32,14 @@ redirectLegacyLink();
 window.addEventListener("hashchange", redirectLegacyLink);
 
 function saveSession() {
+  if (!music) return; // Media pages preserve the homepage's music session.
   try {
     sessionStorage.setItem(
       sessionKey,
       JSON.stringify({
         entered: !entryGate || entryGate.hidden,
-        playing: !music.paused && !music.muted,
-        time: music.currentTime,
+        playing: desiredPlaying,
+        time: music.readyState >= 1 ? music.currentTime : (saved.time || 0),
       }),
     );
   } catch {}
@@ -71,7 +74,10 @@ siteNav.addEventListener("focusout", (event) => {
 siteNav
   .querySelectorAll("a")
   .forEach((link) => link.addEventListener("click", saveSession));
-window.addEventListener("pagehide", saveSession);
+window.addEventListener("pagehide", () => {
+  leaving = true;
+  saveSession();
+});
 
 music.volume = 0.35;
 audioToggle.hidden = false;
@@ -102,14 +108,18 @@ async function playMusic() {
   }
 }
 audioToggle.addEventListener("click", () => {
-  if (music.paused) void playMusic();
+  desiredPlaying = music.paused;
+  if (desiredPlaying) void playMusic();
   else music.pause();
+  saveSession();
 });
 music.addEventListener("play", () => {
+  desiredPlaying = true;
   updateAudio();
   saveSession();
 });
 music.addEventListener("pause", () => {
+  // Browser suspension while navigating is not a request to turn music off.
   updateAudio();
   saveSession();
 });
@@ -143,26 +153,34 @@ if (entryGate && !saved.entered && !internalArrival) {
 } else {
   enter(false);
   if (Number.isFinite(saved.time) && saved.time > 0) {
-    music.addEventListener(
-      "loadedmetadata",
-      () => {
-        if (Number.isFinite(music.duration))
-          music.currentTime = Math.min(saved.time, music.duration);
-      },
-      { once: true },
-    );
+    const restoreTime = () => {
+      if (Number.isFinite(music.duration) && music.duration > 0)
+        music.currentTime = saved.time % music.duration;
+    };
+    if (music.readyState >= 1) restoreTime();
+    else music.addEventListener("loadedmetadata", restoreTime, { once: true });
   }
   if (saved.playing) void playMusic();
 }
 
 // Reconcile controls when the browser restores a document from its back cache.
 window.addEventListener("pageshow", (event) => {
+  leaving = false;
   syncNavBackground();
   if (!event.persisted) return;
   try {
     const latest = JSON.parse(sessionStorage.getItem(sessionKey) || "{}");
-    if (!latest.playing) music.pause();
+    desiredPlaying = latest.playing === true;
+    if (desiredPlaying) void playMusic();
+    else music.pause();
   } catch {}
   closeMenu();
   updateAudio();
 });
+// Browsers that require a fresh gesture resume on the next interaction.
+for (const event of ["pointerdown", "keydown"]) {
+  document.addEventListener(event, (interaction) => {
+    if (interaction.target.closest?.("#audio-toggle, #start-music, #enter-silent")) return;
+    if (desiredPlaying && music.paused && !leaving) void playMusic();
+  });
+}
