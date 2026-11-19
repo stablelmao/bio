@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     if (type === 'tv' && !/^[1-9]\d{0,4}$/.test(episode)) return res.status(400).json({error:'Invalid episode.'});
     const path = type === 'tv' ? `tv/${id}/${season}/${episode}` : `movie/${id}`;
     res.setHeader('Cache-Control','no-store');
-    return res.status(200).json({url:'https://stream.aidan.im/embed/' + path});
+    return res.status(200).json({url:'https://math.aidan.im/embed/' + path});
   }
   if (mode === 'image') {
     const path = String(req.query.path || '');

@@ -18,7 +18,7 @@ test('existing movie requests and numbered TV episodes use the custom player', a
     [{id:'1399', type:'tv', season:'0', episode:'1'}, 'tv/1399/0/1']
   ]) {
     assert.deepEqual(await call({mode:'player', ...query}), {
-      code:200, body:{url:'https://stream.aidan.im/embed/' + path}
+      code:200, body:{url:'https://math.aidan.im/embed/' + path}
     });
   }
   assert.equal((await call({mode:'player', type:'tv', id:'1399', season:'1'})).code, 400);
