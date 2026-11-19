@@ -34,8 +34,7 @@
         <label>Episode <select id="episode"></select></label>
       </div>
       <p id="watch-status" class="hint" role="status"></p>
-      <!-- Keep playback permissions, but block popups, downloads and navigation of the parent page. -->
-      <div class="player" id="player" hidden><iframe id="frame" title="Video player" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+      <div class="player" id="player" hidden><iframe id="frame" title="Video player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
     </section>
     <section aria-labelledby="heading">
       <h2 id="heading">Popular movies</h2><p id="status" class="hint" role="status"></p>
