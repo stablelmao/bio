@@ -1,1 +1,46 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>admin • aidan.im</title><link rel="stylesheet" href="/mu-player.css"></head><body><main class="shell" style="max-width:800px"><header><a class="brand" href="/mu">mu<span>.</span></a></header><div class="intro"><h1>Your <em>picks.</em></h1><p>Curate the playlist everyone sees on mu.</p></div><section class="glass" id="login"><h2>Admin sign in</h2><form class="search" id="loginForm"><input id="password" type="password" placeholder="Password" autocomplete="current-password" required aria-label="Password"><button>Sign in</button></form><p class="hint" id="loginStatus" role="status"></p></section><section class="glass" id="editor" hidden><div class="row-title"><h2>Developer’s Picks</h2><button id="logout" class="small">Sign out</button></div><form id="find" class="search"><input id="query" placeholder="Search for a song" required maxlength="100" aria-label="Search for a song"><button>Search</button></form><p class="hint" id="status" role="status">Search and add songs, then publish your picks.</p><div id="results" class="track-list"></div><h2 style="margin-top:28px">Your selection</h2><div id="selected" class="track-list"></div><button id="publish" class="small" style="margin-top:20px">Publish picks</button></section></main><script src="/mu-admin.js" defer></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#21071e">
+<title>admin • aidan.im</title>
+<link rel="stylesheet" href="/style.css?v=picks-1">
+<link rel="stylesheet" href="/admin.css?v=1">
+<script src="/mu-admin.js?v=2" defer></script>
+</head>
+<body class="media-page admin-page">
+<main class="admin-shell">
+<header class="media-header">
+  <div class="brand">admin, a branch of <a href="/">aidan.im</a></div>
+  <div class="admin-links"><a class="media-link" href="/mu">[ music ]</a><a class="media-link" href="/st">[ streaming ]</a></div>
+</header>
+<div class="media-heading"><h1>your <em>picks.</em></h1></div>
+<p class="admin-intro">a little space for your favorites.</p>
+<div class="account-tabs" role="group" aria-label="Admin account">
+  <button type="button" data-account="music" aria-pressed="true">music admin</button>
+  <button type="button" data-account="jaiden" aria-pressed="false">Jaiden</button>
+</div>
+<section class="media-panel" id="login" aria-labelledby="loginTitle">
+<h2 id="loginTitle">Music admin sign in</h2>
+<p class="hint" id="loginHelp">Manage the developer's picks on mu.</p>
+<form class="admin-form" id="loginForm">
+<label for="password">Password</label>
+<input id="password" type="password" autocomplete="current-password" required maxlength="256">
+<button id="signIn" type="submit">[ sign in ]</button>
+</form>
+<p class="hint" id="loginStatus" role="status"></p>
+</section>
+<section class="media-panel" id="editor" hidden aria-labelledby="editorTitle">
+<div class="row-title"><h2 id="editorTitle">Developer's picks</h2><button id="logout" type="button">[ sign out ]</button></div>
+<form id="find" class="search"><input id="query" placeholder="Search for a song" required maxlength="100" aria-label="Search for a song"><button type="submit">Search</button></form>
+<p class="hint" id="status" role="status">Search and add songs, then publish your picks.</p>
+<div id="results" class="admin-results" aria-label="Search results"></div>
+<h2 class="selection-title">your selection.</h2>
+<div id="selected" class="admin-selection"></div>
+<button id="publish" type="button">[ publish picks ]</button>
+</section>
+</main>
+</body>
+</html>

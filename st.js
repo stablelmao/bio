@@ -16,7 +16,7 @@ async function request(params, signal) {
   return data;
 }
 
-function card(item) {
+function card(item, type = mediaType) {
   const button = document.createElement('button');
   button.className = 'movie';
   button.type = 'button';
@@ -35,7 +35,10 @@ function card(item) {
     year.textContent = item.date.slice(0, 4);
     button.append(year);
   }
-  button.addEventListener('click', () => openWatch(item, button));
+  button.addEventListener('click', () => {
+    if (type !== mediaType) document.querySelector(`[data-type="${type}"]`).click();
+    openWatch(item, button);
+  });
   return button;
 }
 
@@ -51,7 +54,7 @@ async function search() {
   try {
     const data = await request({mode:'search', type:mediaType, q}, controller.signal);
     if (controller.signal.aborted) return;
-    byId('results').replaceChildren(...data.results.map(card));
+    byId('results').replaceChildren(...data.results.map(item => card(item)));
     byId('status').textContent = data.results.length ? '' : 'No ' + label + ' found.';
   } catch (error) {
     if (!controller.signal.aborted) byId('status').textContent = error.message;
@@ -153,3 +156,24 @@ for (const button of typeButtons) {
   });
 }
 search();
+
+async function loadJaidenPicks() {
+  try {
+    const response = await fetch('/api/st-admin', {cache:'no-store'});
+    const data = await response.json();
+    if (!response.ok || !Array.isArray(data.picks)) throw Error('Could not load picks.');
+    byId('jaiden-picks').replaceChildren(...data.picks.map(item => {
+      const article = document.createElement('article');
+      article.className = 'jaiden-pick';
+      const reason = document.createElement('p');
+      reason.className = 'pick-reason';
+      reason.textContent = item.reason;
+      article.append(card(item, 'movie'), reason);
+      return article;
+    }));
+    byId('jaiden-status').textContent = data.picks.length ? '' : "Jaiden's favorites are coming soon.";
+  } catch {
+    byId('jaiden-status').textContent = "Couldn't load Jaiden's picks right now.";
+  }
+}
+void loadJaidenPicks();

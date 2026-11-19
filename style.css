@@ -492,9 +492,9 @@ html { scroll-padding-top: 80px; }
 .wall-form input,
 .wall-form textarea {
   width: 100%;
-  border: 1px solid #ff8de94d;
-  border-radius: 8px;
-  background: #21071e66;
+  border: 1px solid #ffc2ef38;
+  border-radius: 0;
+  background: #2c0b29;
   color: #fff4fd;
   font: inherit;
   padding: 12px 16px;
@@ -519,7 +519,21 @@ html { scroll-padding-top: 80px; }
 .wall-submit {
   justify-self: start;
   font-size: 15px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #f3d5eb;
+  box-shadow: none;
+  min-height: 44px;
+  padding: 6px 10px;
 }
+.wall-submit:hover, .wall-refresh:hover {
+  background: #ffb3e619;
+  color: #fff;
+  transform: none;
+  text-decoration: none;
+}
+.wall-refresh { padding-inline: 10px; }
 #wall-form-status {
   margin: 0;
   min-height: 26px;

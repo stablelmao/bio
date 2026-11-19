@@ -1,0 +1,24 @@
+.admin-shell { display:block; width:min(100%,880px); padding:24px clamp(24px,5vw,64px) 48px; }
+.admin-links,.account-tabs { display:flex; flex-wrap:wrap; gap:8px; }
+.admin-intro { color:var(--muted); margin:0 0 24px; }
+.account-tabs { margin-bottom:16px; }
+.admin-page h2 { color:inherit; font-size:23px; letter-spacing:-.04em; }
+.admin-page .row-title { justify-content:space-between; flex-wrap:wrap; margin-bottom:20px; }
+.admin-form { display:grid; gap:8px; max-width:420px; }
+.admin-form label,.reason-label { color:var(--muted); font-size:14px; }
+.admin-page .admin-form input,.admin-page textarea { width:100%; border:1px solid #ffc2ef38; background:#ffffff05; border-radius:0; padding:12px; color:inherit; font:inherit; font-size:16px; }
+.admin-form button { justify-self:start; margin-top:8px; }
+.admin-results,.admin-selection { display:grid; }
+.admin-results { max-height:360px; overflow:auto; }
+.admin-item { padding:14px 0; border-bottom:1px solid #ffffff26; min-width:0; }
+.item-heading { display:flex; align-items:center; gap:8px; }
+.item-copy { min-width:0; }
+.item-copy strong { display:block; font-size:16px; overflow-wrap:anywhere; }
+.item-copy small { display:block; color:var(--muted); font-size:13px; }
+.admin-page .item-heading button { flex:none; min-width:44px; font-size:24px; }
+.admin-page .selection-title { margin-top:28px; }
+.reason-label { display:block; margin:12px 0 6px; }
+.admin-page textarea { min-height:96px; resize:vertical; }
+.admin-page textarea:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+#publish { margin-top:20px; }
+@media(max-width:420px) { .admin-shell { padding-inline:20px; } .admin-page .media-heading h1 { font-size:52px; } }
